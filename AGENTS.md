@@ -8,7 +8,7 @@ Do **NOT** re-add legacy themes 4 to 9 or cyberpunk. The project is focused excl
 
 1. **Prohori Classic** (`themes/default.conf`):
    - Layout: Concentric orbital chronometer dials with windup rotation on submit.
-   - Indicator: Translucent Liquid Glass watery chronometer capsule (`indicatorPill`) with ambient volumetric cyan aura, curved top & bottom specular meniscuses, and internal refraction bevels. Rotating dial numbers and tick marks undergo authentic optical liquid refraction (convex lens magnification, luminous caustics boost, and cyan chromatic dispersion) as they sweep smoothly under the watery liquid glass.
+   - Indicator: Translucent Liquid Glass watery chronometer capsule (`indicatorPill`) with seamless full-capsule specular reflection, desaturated realistic glass border (`rgba(125, 160, 185, 0.22)`), softened ambient aura, and internal refraction bevels. Rotating dial numbers and tick marks undergo authentic optical liquid refraction (convex lens magnification, luminous caustics boost, and cyan chromatic dispersion) as they sweep smoothly under the watery liquid glass without overflow.
    - Top HUD: Classic 3-button action row (`hudRowClassic`: `[ REBOOT ] [ SHUTDOWN ] [ SESSION ▾ ]`) with iOS liquid glass specular sheen, inner refraction bevels, and ambient glow.
    - Background: Dark atmospheric radial vignette (`backgrounds/default.jpg`).
    - Accent: `#38bdf8` (Cyan Blue).

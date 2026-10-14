@@ -591,17 +591,17 @@ Rectangle {
                 width: (clockContainer.secR - clockContainer.minR) + (120 * s)
                 height: 76 * s
                 radius: 38 * s
-                color: Qt.rgba(root.pillColor.r, root.pillColor.g, root.pillColor.b, 0.28)
-                border.color: Qt.rgba(56/255, 189/255, 248/255, 0.40)
+                color: Qt.rgba(14/255, 18/255, 26/255, 0.28)
+                border.color: Qt.rgba(125/255, 160/255, 185/255, 0.22)
                 border.width: 1.5 * s
 
-                // 1. Ambient Volumetric Liquid Aura (Diffused aquatic glow)
+                // 1. Ambient Volumetric Liquid Aura (Subtle soft aquatic glow)
                 Rectangle {
                     anchors.centerIn: parent
-                    width: parent.width + 16 * s
-                    height: parent.height + 16 * s
+                    width: parent.width + 8 * s
+                    height: parent.height + 8 * s
                     radius: height * 0.5
-                    color: Qt.rgba(root.accentColor.r, root.accentColor.g, root.accentColor.b, 0.12)
+                    color: Qt.rgba(90/255, 140/255, 180/255, 0.05)
                     z: -1
                 }
 
@@ -628,7 +628,7 @@ Rectangle {
                         width: 4 * s
                         height: 4 * s
                         radius: 2 * s
-                        color: root.accentColor
+                        color: Qt.rgba(root.accentColor.r, root.accentColor.g, root.accentColor.b, 0.50)
                     }
                 }
 
@@ -642,51 +642,31 @@ Rectangle {
                     color: root.accentColor
                 }
 
-                // 5. iOS Liquid Glass Top Specular Meniscus (Convex surface tension reflection)
-                Rectangle {
-                    anchors.top: parent.top
-                    anchors.topMargin: 1.5 * s
-                    anchors.left: parent.left
-                    anchors.leftMargin: 3 * s
-                    anchors.right: parent.right
-                    anchors.rightMargin: 3 * s
-                    height: parent.height * 0.45
-                    radius: parent.radius - 1.5 * s
-                    clip: true
-                    gradient: Gradient {
-                        orientation: Gradient.Vertical
-                        GradientStop { position: 0.0; color: Qt.rgba(255, 255, 255, 0.42) }
-                        GradientStop { position: 0.35; color: Qt.rgba(255, 255, 255, 0.12) }
-                        GradientStop { position: 1.0; color: "transparent" }
-                    }
-                }
-
-                // 6. Bottom Liquid Meniscus Caustic (Internal total reflection)
-                Rectangle {
-                    anchors.bottom: parent.bottom
-                    anchors.bottomMargin: 1.5 * s
-                    anchors.left: parent.left
-                    anchors.leftMargin: 4 * s
-                    anchors.right: parent.right
-                    anchors.rightMargin: 4 * s
-                    height: parent.height * 0.35
-                    radius: parent.radius - 1.5 * s
-                    clip: true
-                    gradient: Gradient {
-                        orientation: Gradient.Vertical
-                        GradientStop { position: 0.0; color: "transparent" }
-                        GradientStop { position: 0.60; color: Qt.rgba(56/255, 189/255, 248/255, 0.08) }
-                        GradientStop { position: 1.0; color: Qt.rgba(255, 255, 255, 0.22) }
-                    }
-                }
-
-                // 7. Inner Refraction Bevel Rim
+                // 5. iOS Liquid Glass Specular Meniscus (Full-capsule seamless optical reflection)
                 Rectangle {
                     anchors.fill: parent
                     anchors.margins: 1.5 * s
-                    radius: parent.radius - 1.5 * s
+                    radius: height * 0.5
                     color: "transparent"
-                    border.color: Qt.rgba(255, 255, 255, 0.16)
+                    clip: true
+                    gradient: Gradient {
+                        orientation: Gradient.Vertical
+                        GradientStop { position: 0.0; color: Qt.rgba(255, 255, 255, 0.20) }
+                        GradientStop { position: 0.24; color: Qt.rgba(255, 255, 255, 0.05) }
+                        GradientStop { position: 0.45; color: "transparent" }
+                        GradientStop { position: 0.85; color: "transparent" }
+                        GradientStop { position: 0.96; color: Qt.rgba(255, 255, 255, 0.03) }
+                        GradientStop { position: 1.0; color: Qt.rgba(255, 255, 255, 0.10) }
+                    }
+                }
+
+                // 6. Inner Refraction Bevel Rim (Seamless capsule contour)
+                Rectangle {
+                    anchors.fill: parent
+                    anchors.margins: 1.5 * s
+                    radius: height * 0.5
+                    color: "transparent"
+                    border.color: Qt.rgba(255, 255, 255, 0.09)
                     border.width: 1 * s
                 }
             }
@@ -740,7 +720,7 @@ Rectangle {
                             width: parent.width + 4 * s
                             height: parent.height + 4 * s
                             radius: width * 0.5
-                            color: Qt.rgba(root.accentColor.r, root.accentColor.g, root.accentColor.b, 0.45 * minDialItem.liquidCurvature)
+                            color: Qt.rgba(root.accentColor.r, root.accentColor.g, root.accentColor.b, 0.22 * minDialItem.liquidCurvature)
                             visible: isMajor && minDialItem.liquidCurvature > 0.08
                             z: -1
                         }
@@ -756,7 +736,7 @@ Rectangle {
                         height: minNumTxt.height
                         rotation: disp * 180 / Math.PI
                         transformOrigin: Item.Center
-                        scale: 1.0 + (0.35 * minDialItem.liquidCurvature)
+                        scale: 1.0 + (0.24 * minDialItem.liquidCurvature)
 
                         // 1. Chromatic Dispersion & Caustic Glow Halo (Liquid Refraction Under Water)
                         Text {
@@ -767,7 +747,7 @@ Rectangle {
                             font.family: root.boldFont
                             font.pixelSize: 22 * s
                             font.weight: Font.Black
-                            color: Qt.rgba(root.accentColor.r, root.accentColor.g, root.accentColor.b, 0.75 * minDialItem.liquidCurvature)
+                            color: Qt.rgba(root.accentColor.r, root.accentColor.g, root.accentColor.b, 0.35 * minDialItem.liquidCurvature)
                             scale: 1.08
                             visible: minDialItem.liquidCurvature > 0.06
                             renderType: Text.NativeRendering
@@ -847,7 +827,7 @@ Rectangle {
                             width: parent.width + 4 * s
                             height: parent.height + 4 * s
                             radius: width * 0.5
-                            color: Qt.rgba(root.accentColor.r, root.accentColor.g, root.accentColor.b, 0.45 * secDialItem.liquidCurvature)
+                            color: Qt.rgba(root.accentColor.r, root.accentColor.g, root.accentColor.b, 0.22 * secDialItem.liquidCurvature)
                             visible: isMajor && secDialItem.liquidCurvature > 0.08
                             z: -1
                         }
@@ -863,7 +843,7 @@ Rectangle {
                         height: secNumTxt.height
                         rotation: disp * 180 / Math.PI
                         transformOrigin: Item.Center
-                        scale: 1.0 + (0.35 * secDialItem.liquidCurvature)
+                        scale: 1.0 + (0.24 * secDialItem.liquidCurvature)
 
                         // 1. Chromatic Dispersion & Caustic Glow Halo (Liquid Refraction Under Water)
                         Text {
@@ -874,7 +854,7 @@ Rectangle {
                             font.family: root.boldFont
                             font.pixelSize: 18 * s
                             font.weight: Font.Black
-                            color: Qt.rgba(root.accentColor.r, root.accentColor.g, root.accentColor.b, 0.75 * secDialItem.liquidCurvature)
+                            color: Qt.rgba(root.accentColor.r, root.accentColor.g, root.accentColor.b, 0.35 * secDialItem.liquidCurvature)
                             scale: 1.08
                             visible: secDialItem.liquidCurvature > 0.06
                             renderType: Text.NativeRendering
