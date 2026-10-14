@@ -3,8 +3,8 @@
 ## Project Summary
 **Prohori** (প্রহরী - The Sentinel) is a handcrafted modern SDDM (Simple Desktop Display Manager) greeter theme developed by **shell-ninja** using QtQuick 6 / QML.
 
-## Active Themes & Presets (Strictly 2 Themes)
-Do **NOT** re-add themes 3 to 9 or cyberpunk. The project is focused exclusively on two polished presets:
+## Active Themes & Presets (Strictly 3 Handcrafted Themes)
+Do **NOT** re-add legacy themes 4 to 9 or cyberpunk. The project is focused exclusively on three polished presets:
 
 1. **Prohori Classic** (`themes/default.conf`):
    - Layout: Concentric orbital chronometer dials with windup rotation on submit.
@@ -17,7 +17,14 @@ Do **NOT** re-add themes 3 to 9 or cyberpunk. The project is focused exclusively
    - Ambient Particles: Falling green micro-dust motes layer (32 particles, 1.2px–2.8px, staggered drift).
    - Dock: Center-right floating authentication card (`minAuthCard`).
    - Accent: `#00f5a0` (Hyper-Mint Green).
-   - Ambient Glow: Explicitly set `enableAmbientGlow=false` (no large light blobs).
+
+3. **Prohori Astral** (`themes/astral.conf`):
+   - Layout: Stacked architectural typography (giant white hours over electric violet minutes), vertical timeline rail with seconds bead, telemetry counter (`SEC // [26s // 60]`).
+   - Background: Deep cosmic abyss wallpaper (`backgrounds/astral.jpg`) with fine micro-starfield matrix.
+   - Ambient Animation: Dynamic cyber-celestial Constellation Mesh (28 floating nodes with distance-based dynamic connection lines and nexus halos).
+   - Dock: Center-right floating authentication card (`minAuthCard`) with violet laser scan and rotating radar indicator.
+   - Accent: `#b026ff` (Neon Amethyst / Violet).
+
 
 ## Authentication Mechanics (Minimal Theme)
 - **Login Animation (`startLoginSequence`)**:

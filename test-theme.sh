@@ -6,9 +6,17 @@
 
 set -e
 
-SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+# Resolve symlinks so the script works from any invocation path
+SCRIPT_SOURCE="${BASH_SOURCE[0]}"
+while [ -L "$SCRIPT_SOURCE" ]; do
+    _TMP_DIR="$(cd -P "$(dirname "$SCRIPT_SOURCE")" >/dev/null 2>&1 && pwd)"
+    SCRIPT_SOURCE="$(readlink "$SCRIPT_SOURCE")"
+    [[ "$SCRIPT_SOURCE" != /* ]] && SCRIPT_SOURCE="$_TMP_DIR/$SCRIPT_SOURCE"
+done
+SCRIPT_DIR="$(cd -P "$(dirname "$SCRIPT_SOURCE")" >/dev/null 2>&1 && pwd)"
 PRESETS_DIR="${SCRIPT_DIR}/themes"
 THEME_CONF="${SCRIPT_DIR}/theme.conf"
+
 
 # ANSI Colors
 C_RESET="\033[0m"
@@ -42,7 +50,9 @@ fi
 THEMES=(
     "default|Prohori Classic|#38bdf8|Iconic orbital concentric chronometer dials on deep obsidian navy"
     "minimal|Prohori Minimal|#00f5a0|Architectural monolithic digital clock, kinetic seconds rail & floating auth dock"
+    "astral|Prohori Astral|#b026ff|Stacked architectural typography, cybernetic telemetry & constellation mesh on cosmic abyss"
 )
+
 
 get_current_theme_name() {
     if [[ -f "$THEME_CONF" ]]; then

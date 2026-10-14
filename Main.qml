@@ -28,8 +28,10 @@ Rectangle {
 
     // Config options with safe fallbacks
     readonly property string themeName: (typeof config !== "undefined" && config.themeName) ? config.themeName : "Prohori Classic"
-    readonly property string themeLayout: (typeof config !== "undefined" && config.themeLayout) ? config.themeLayout : (themeName.toLowerCase().indexOf("minimal") !== -1 ? "minimal" : "dialer")
+    readonly property string themeLayout: (typeof config !== "undefined" && config.themeLayout) ? config.themeLayout : (themeName.toLowerCase().indexOf("minimal") !== -1 ? "minimal" : (themeName.toLowerCase().indexOf("astral") !== -1 ? "astral" : "dialer"))
     readonly property bool isMinimalLayout: themeLayout === "minimal"
+    readonly property bool isAstralLayout: themeLayout === "astral"
+    readonly property bool isModernLayout: isMinimalLayout || isAstralLayout
     readonly property string themeMode: (typeof config !== "undefined" && config.themeMode) ? config.themeMode : "dark"
     readonly property bool isLight: themeMode === "light"
     readonly property color backgroundColor: (typeof config !== "undefined" && config.backgroundColor) ? config.backgroundColor : (isLight ? "#f8fafc" : "#080c12")
@@ -39,7 +41,7 @@ Rectangle {
     readonly property bool enableVirtualKeyboard: (typeof config !== "undefined" && config.enableVirtualKeyboard !== undefined) ? (config.enableVirtualKeyboard === "true" || config.enableVirtualKeyboard === true) : false
 
     function focusActiveInput() {
-        if (root.isMinimalLayout) {
+        if (root.isModernLayout) {
             if (typeof minPassInput !== "undefined" && minPassInput) minPassInput.forceActiveFocus()
         } else {
             if (typeof passInput !== "undefined" && passInput) passInput.forceActiveFocus()
@@ -69,6 +71,7 @@ Rectangle {
     readonly property real backgroundDim: (typeof config !== "undefined" && config.backgroundDim !== undefined) ? Number(config.backgroundDim) : 0.0
     readonly property bool showOrbitTracks: typeof config === "undefined" || (config.showOrbitTracks !== "false" && config.showOrbitTracks !== false)
     readonly property bool enableDustParticles: (typeof config !== "undefined" && config.enableDustParticles !== undefined) ? (config.enableDustParticles === "true" || config.enableDustParticles === true) : root.isMinimalLayout
+    readonly property bool enableConstellationMesh: (typeof config !== "undefined" && config.enableConstellationMesh !== undefined) ? (config.enableConstellationMesh === "true" || config.enableConstellationMesh === true) : root.isAstralLayout
 
 
     readonly property string authSubtitle: (typeof config !== "undefined" && config.authSubtitle) ? config.authSubtitle : "TYPE PASSWORD OR FIDO PIN"
@@ -379,6 +382,98 @@ Rectangle {
         }
     }
 
+    // Ambient Cyber-Celestial Constellation Mesh Layer (Floating amethyst nodes & dynamic interconnecting lines)
+    Item {
+        id: constellationLayer
+        anchors.fill: parent
+        z: 2
+        visible: root.enableConstellationMesh
+        opacity: root.uiOpacity
+
+        Canvas {
+            id: cvConstellation
+            anchors.fill: parent
+            renderTarget: Canvas.FramebufferObject
+            renderStrategy: Canvas.Cooperative
+
+            property real animTime: 0
+
+            NumberAnimation on animTime {
+                from: 0
+                to: 3600000
+                duration: 3600000
+                loops: Animation.Infinite
+                running: constellationLayer.visible
+            }
+
+
+            onAnimTimeChanged: requestPaint()
+
+            onPaint: {
+                var ctx = getContext('2d');
+                ctx.clearRect(0, 0, width, height);
+
+                var t = animTime * 0.0006;
+                var pts = [];
+                var count = 28;
+                var col = root.accentColor;
+
+                for (var i = 0; i < count; i++) {
+                    var x0 = (i / count) * width + 30 * root.s;
+                    var y0 = (((i * 43 + 23) % 100) / 100.0) * height;
+                    var fx = 0.45 + (i % 6) * 0.12;
+                    var fy = 0.38 + (i % 8) * 0.11;
+                    var ax = (48 + (i % 5) * 16) * root.s;
+                    var ay = (42 + (i % 4) * 16) * root.s;
+
+                    var px = x0 + Math.sin(t * fx + i * 1.2) * ax;
+                    var py = y0 + Math.cos(t * fy + i * 1.7) * ay;
+                    var pr = (1.5 + (i % 3) * 0.9) * root.s;
+                    var isHub = (i % 7 === 0);
+
+                    pts.push({ x: px, y: py, r: pr, isHub: isHub });
+                }
+
+                var maxD = 185 * root.s;
+                var maxD2 = maxD * maxD;
+
+                // Draw dynamic connection lines between proximate nodes
+                for (var a = 0; a < count; a++) {
+                    for (var b = a + 1; b < count; b++) {
+                        var dx = pts[a].x - pts[b].x;
+                        var dy = pts[a].y - pts[b].y;
+                        var d2 = dx * dx + dy * dy;
+                        if (d2 < maxD2) {
+                            var dist = Math.sqrt(d2);
+                            var lineAlpha = (1.0 - dist / maxD) * 0.32;
+                            ctx.beginPath();
+                            ctx.moveTo(pts[a].x, pts[a].y);
+                            ctx.lineTo(pts[b].x, pts[b].y);
+                            ctx.strokeStyle = Qt.rgba(col.r, col.g, col.b, lineAlpha);
+                            ctx.lineWidth = 1 * root.s;
+                            ctx.stroke();
+                        }
+                    }
+                }
+
+                // Draw luminous amethyst nodes and nexus halos
+                for (var n = 0; n < count; n++) {
+                    var p = pts[n];
+                    if (p.isHub) {
+                        ctx.beginPath();
+                        ctx.arc(p.x, p.y, p.r * 2.8, 0, 2 * Math.PI);
+                        ctx.fillStyle = Qt.rgba(col.r, col.g, col.b, 0.12);
+                        ctx.fill();
+                    }
+                    ctx.beginPath();
+                    ctx.arc(p.x, p.y, p.r, 0, 2 * Math.PI);
+                    ctx.fillStyle = Qt.rgba(col.r, col.g, col.b, 0.75);
+                    ctx.fill();
+                }
+            }
+        }
+    }
+
     // Error Alert Vignette Overlay (Red pulse on authentication failure)
     Rectangle {
         id: errorAlertOverlay
@@ -413,7 +508,7 @@ Rectangle {
         // Clock & Dials Section (Left)
         Item {
             id: clockContainer
-            visible: !root.isMinimalLayout
+            visible: !root.isModernLayout
             anchors.left: parent.left
             anchors.verticalCenter: parent.verticalCenter
             width: parent.width * 0.65
@@ -692,7 +787,7 @@ Rectangle {
         Row {
             id: hudRow
             anchors.right: parent.right
-            anchors.rightMargin: root.isMinimalLayout ? 130 * s : root.marginR
+            anchors.rightMargin: root.isModernLayout ? 130 * s : root.marginR
             anchors.top: parent.top
             anchors.topMargin: 46 * s
             spacing: 12 * s
@@ -736,7 +831,7 @@ Rectangle {
             anchors.top: parent.top
             anchors.topMargin: 88 * s
             anchors.right: parent.right
-            anchors.rightMargin: root.isMinimalLayout ? 130 * s : root.marginR
+            anchors.rightMargin: root.isModernLayout ? 130 * s : root.marginR
             width: 250 * s
             height: root.sessionMenuOpen ? Math.min(300 * s, ((typeof sessionModel !== "undefined" ? sessionModel.rowCount() : 1) * 44 * s) + 20 * s) : 0
             clip: true
@@ -821,10 +916,10 @@ Rectangle {
             id: uMenuContainer
             z: 6000
             anchors.right: parent.right
-            anchors.rightMargin: root.isMinimalLayout ? 130 * s : root.marginR
+            anchors.rightMargin: root.isModernLayout ? 130 * s : root.marginR
             anchors.bottom: parent.bottom
-            anchors.bottomMargin: root.isMinimalLayout ? (parent.height * 0.5 + 155 * s) : 240 * s
-            width: root.isMinimalLayout ? 430 * s : 280 * s
+            anchors.bottomMargin: root.isModernLayout ? (parent.height * 0.5 + 155 * s) : 240 * s
+            width: root.isModernLayout ? 430 * s : 280 * s
             height: root.userMenuOpen ? Math.min(320 * s, ((typeof userModel !== "undefined" ? userModel.rowCount() : 1) * 52 * s) + 40 * s) : 0
             clip: true
             radius: 16 * s
@@ -974,7 +1069,7 @@ Rectangle {
         // Bottom Right Login Form Section (Dialer Layout)
         Column {
             id: loginPanel
-            visible: !root.isMinimalLayout
+            visible: !root.isModernLayout
             anchors.right: parent.right
             anchors.rightMargin: root.marginR
             anchors.bottom: parent.bottom
@@ -1158,11 +1253,11 @@ Rectangle {
         }
 
         // =====================================================================
-        // Brand-New Modern Minimal Architecture Layout
+        // Brand-New Modern Architecture Layout (Minimal & Astral Presets)
         // =====================================================================
         Item {
             id: minimalContainer
-            visible: root.isMinimalLayout
+            visible: root.isModernLayout
             anchors.fill: parent
 
             // 1. Viewfinder Crosshairs & Modern Architectural Frame Guides
@@ -1185,7 +1280,7 @@ Rectangle {
                     }
 
                     Text {
-                        text: "PROHORI // SENTINEL CORE"
+                        text: root.isAstralLayout ? "PROHORI // ASTRAL SENTINEL" : "PROHORI // SENTINEL CORE"
                         font.family: root.boldFont
                         font.pixelSize: 11 * s
                         font.letterSpacing: 3 * s
@@ -1219,7 +1314,9 @@ Rectangle {
                     Text {
                         text: root.isErrorState
                               ? "STATUS: SECURITY ALERT // ACCESS REJECTED"
-                              : (root.isLoggingIn ? "STATUS: AUTHENTICATING // VERIFYING CREDENTIALS" : "STATUS: ENCRYPTED // SYSTEM READY")
+                              : (root.isLoggingIn
+                                 ? (root.isAstralLayout ? "STATUS: ASTRAL LINK // VERIFYING QUANTUM KEY" : "STATUS: AUTHENTICATING // VERIFYING CREDENTIALS")
+                                 : (root.isAstralLayout ? "STATUS: ASTRAL SYNCHRONIZED // SYSTEM READY" : "STATUS: ENCRYPTED // SYSTEM READY"))
                         font.family: root.boldFont
                         font.pixelSize: 11 * s
                         font.letterSpacing: 2 * s
@@ -1244,9 +1341,10 @@ Rectangle {
                 }
             }
 
-            // 2. Left Hero Section: Monolithic Typographic Clock & Kinetic Sweep
+            // 2a. Minimal Hero Section: Monolithic Typographic Clock & Kinetic Sweep
             Item {
                 id: minHeroClock
+                visible: root.isMinimalLayout
                 anchors.left: parent.left
                 anchors.leftMargin: 120 * s
                 anchors.verticalCenter: parent.verticalCenter
@@ -1452,6 +1550,229 @@ Rectangle {
                 }
             }
 
+            // 2b. Astral Hero Section: Stacked Giant Architectural Typography & Cybernetic Telemetry
+            Item {
+                id: astralHeroClock
+                visible: root.isAstralLayout
+                anchors.left: parent.left
+                anchors.leftMargin: 120 * s
+                anchors.verticalCenter: parent.verticalCenter
+                width: 680 * s
+                height: 460 * s
+
+                readonly property real secFrac: (root.curS * 1000 + root.curMS) / 60000.0
+
+                Column {
+                    anchors.fill: parent
+                    spacing: 12 * s
+
+                    // 1. Top Cybernetic Telemetry Header
+                    Row {
+                        spacing: 10 * s
+
+                        // Glowing Astral Node Badge
+                        Rectangle {
+                            height: 24 * s
+                            width: astralNodeTxt.width + 20 * s
+                            radius: 6 * s
+                            color: Qt.rgba(root.accentColor.r, root.accentColor.g, root.accentColor.b, 0.12)
+                            border.color: Qt.rgba(root.accentColor.r, root.accentColor.g, root.accentColor.b, 0.40)
+                            border.width: 1 * s
+
+                            Row {
+                                anchors.centerIn: parent
+                                spacing: 6 * s
+                                Rectangle {
+                                    width: 6 * s
+                                    height: 6 * s
+                                    radius: 3 * s
+                                    color: root.accentColor
+                                    anchors.verticalCenter: parent.verticalCenter
+                                    SequentialAnimation on opacity {
+                                        loops: Animation.Infinite
+                                        NumberAnimation { from: 1.0; to: 0.3; duration: 900; easing.type: Easing.InOutQuad }
+                                        NumberAnimation { from: 0.3; to: 1.0; duration: 900; easing.type: Easing.InOutQuad }
+                                    }
+                                }
+                                Text {
+                                    id: astralNodeTxt
+                                    text: "ASTRAL // PROTOCOL 07"
+                                    font.family: root.boldFont
+                                    font.pixelSize: 10 * s
+                                    font.letterSpacing: 2.5 * s
+                                    font.weight: Font.Bold
+                                    color: root.accentColor
+                                    renderType: Text.NativeRendering
+                                }
+                            }
+                        }
+
+                        // Auxiliary Status Badge
+                        Rectangle {
+                            height: 24 * s
+                            width: astralAuxTxt.width + 18 * s
+                            radius: 6 * s
+                            color: Qt.rgba(255, 255, 255, 0.04)
+                            border.color: Qt.rgba(255, 255, 255, 0.08)
+                            border.width: 1 * s
+
+                            Text {
+                                id: astralAuxTxt
+                                anchors.centerIn: parent
+                                text: "ORBITAL FLUX: STABLE // " + (root.hourFormat === "12" ? (root.curH >= 12 ? "PM" : "AM") : "24H")
+                                font.family: root.semiBoldFont
+                                font.pixelSize: 10 * s
+                                font.letterSpacing: 2 * s
+                                font.weight: Font.DemiBold
+                                color: root.subTextColor
+                                renderType: Text.NativeRendering
+                            }
+                        }
+                    }
+
+                    // 2. Middle Row: Stacked Giant Architectural Numbers + Vertical Timeline Gauge
+                    Row {
+                        spacing: 24 * s
+
+                        // Vertical Left Accent Rail
+                        Rectangle {
+                            width: 3 * s
+                            height: 240 * s
+                            radius: 1.5 * s
+                            color: Qt.rgba(255, 255, 255, 0.08)
+                            anchors.verticalCenter: parent.verticalCenter
+
+                            // Moving luminous pulse bead indicating second fraction
+                            Rectangle {
+                                anchors.horizontalCenter: parent.horizontalCenter
+                                y: Math.max(0, Math.min(parent.height - height, parent.height * astralHeroClock.secFrac))
+                                width: 7 * s
+                                height: 18 * s
+                                radius: 3.5 * s
+                                color: root.accentColor
+                            }
+                        }
+
+                        // Stacked Hours & Minutes (Monumental Architectural Typography)
+                        Column {
+                            spacing: -18 * s
+                            anchors.verticalCenter: parent.verticalCenter
+
+                            // Hours (Bright pearl/white)
+                            Text {
+                                text: String(root.displayHour).padStart(2, '0')
+                                font.family: root.boldFont
+                                font.pixelSize: 128 * s
+                                font.letterSpacing: -2 * s
+                                font.weight: Font.Black
+                                color: root.mainTextColor
+                                renderType: Text.NativeRendering
+                            }
+
+                            // Minutes (Vibrant Neon Violet)
+                            Text {
+                                text: String(root.curM).padStart(2, '0')
+                                font.family: root.boldFont
+                                font.pixelSize: 128 * s
+                                font.letterSpacing: -2 * s
+                                font.weight: Font.Black
+                                color: root.accentColor
+                                renderType: Text.NativeRendering
+                            }
+                        }
+
+                        // Right-Hand Telemetry Gauge Column
+                        Column {
+                            anchors.verticalCenter: parent.verticalCenter
+                            spacing: 14 * s
+                            width: 220 * s
+
+                            // Seconds Pill & Counter
+                            Rectangle {
+                                width: parent.width
+                                height: 46 * s
+                                radius: 10 * s
+                                color: Qt.rgba(root.accentColor.r, root.accentColor.g, root.accentColor.b, 0.08)
+                                border.color: Qt.rgba(root.accentColor.r, root.accentColor.g, root.accentColor.b, 0.35)
+                                border.width: 1.5 * s
+
+                                Row {
+                                    anchors.centerIn: parent
+                                    spacing: 8 * s
+
+                                    Text {
+                                        text: "SEC"
+                                        font.family: root.boldFont
+                                        font.pixelSize: 11 * s
+                                        font.letterSpacing: 2 * s
+                                        font.weight: Font.Bold
+                                        color: root.subTextColor
+                                        anchors.verticalCenter: parent.verticalCenter
+                                    }
+
+                                    Text {
+                                        text: String(root.curS).padStart(2, '0')
+                                        font.family: root.boldFont
+                                        font.pixelSize: 20 * s
+                                        font.weight: Font.Black
+                                        color: root.accentColor
+                                        anchors.verticalCenter: parent.verticalCenter
+                                    }
+
+                                    Text {
+                                        text: "// 60"
+                                        font.family: root.semiBoldFont
+                                        font.pixelSize: 11 * s
+                                        font.weight: Font.Bold
+                                        color: root.dimTextColor
+                                        anchors.verticalCenter: parent.verticalCenter
+                                    }
+                                }
+                            }
+
+                            // Micro Progress Bar for Seconds
+                            Rectangle {
+                                width: parent.width
+                                height: 4 * s
+                                radius: 2 * s
+                                color: Qt.rgba(255, 255, 255, 0.08)
+
+                                Rectangle {
+                                    anchors.left: parent.left
+                                    anchors.top: parent.top
+                                    anchors.bottom: parent.bottom
+                                    width: Math.max(4 * s, parent.width * (root.curS / 60.0))
+                                    radius: 2 * s
+                                    color: root.accentColor
+                                }
+                            }
+
+                            // Day Badge
+                            Text {
+                                text: Qt.formatDate(new Date(), "dddd").toUpperCase()
+                                font.family: root.boldFont
+                                font.pixelSize: 18 * s
+                                font.letterSpacing: 4 * s
+                                font.weight: Font.Black
+                                color: root.mainTextColor
+                                renderType: Text.NativeRendering
+                            }
+
+                            // Full Cosmic Date
+                            Text {
+                                text: Qt.formatDate(new Date(), "dd MMMM yyyy").toUpperCase()
+                                font.family: root.semiBoldFont
+                                font.pixelSize: 12 * s
+                                font.letterSpacing: 3 * s
+                                font.weight: Font.DemiBold
+                                color: root.subTextColor
+                                renderType: Text.NativeRendering
+                            }
+                        }
+                    }
+                }
+            }
+
             // 3. Center-Right Floating Authentication Monolith Dock
             Rectangle {
                 id: minAuthCard
@@ -1529,7 +1850,7 @@ Rectangle {
                                 }
 
                                 Text {
-                                    text: "ACTIVE OPERATOR // STANDBY"
+                                    text: root.isAstralLayout ? "ASTRAL OPERATOR // QUANTUM LINK" : "ACTIVE OPERATOR // STANDBY"
                                     font.family: root.semiBoldFont
                                     font.pixelSize: 10 * s
                                     font.letterSpacing: 2 * s
@@ -1622,7 +1943,7 @@ Rectangle {
                             font.family: root.boldFont
                             font.pixelSize: 18 * s
                             font.letterSpacing: 5 * s
-                            focus: root.isMinimalLayout
+                            focus: root.isModernLayout
                             activeFocusOnPress: false
                             cursorVisible: true
                             enabled: !root.isLoggingIn
@@ -1920,7 +2241,7 @@ Rectangle {
 
     // Login Action Logic
     function startLoginSequence() {
-        var pw = root.isMinimalLayout ? minPassInput.text : passInput.text
+        var pw = root.isModernLayout ? minPassInput.text : passInput.text
         if (pw.length === 0 || root.isLoggingIn) {
             root.focusActiveInput()
             return
@@ -1930,7 +2251,7 @@ Rectangle {
         root.isErrorState = false
         errorResetTimer.stop()
 
-        if (root.isMinimalLayout) {
+        if (root.isModernLayout) {
             minLoginAnim.start()
         } else if (root.enableWindup) {
             windupAnim.start()
@@ -1972,7 +2293,7 @@ Rectangle {
 
     function doLogin() {
         var uname = root.currentUserLoginName
-        var pw = root.isMinimalLayout ? minPassInput.text : passInput.text
+        var pw = root.isModernLayout ? minPassInput.text : passInput.text
         if (typeof sddm !== "undefined") {
             sddm.login(uname, pw, root.sessionIndex)
         }
@@ -1991,7 +2312,7 @@ Rectangle {
             root.isErrorState = false
             errText.text = ""
             if (typeof minErrText !== "undefined" && minErrText) minErrText.text = "ACCESS GRANTED // INITIALIZING SYSTEM"
-            if (root.isMinimalLayout) {
+            if (root.isModernLayout) {
                 minUnlockAnim.start()
             }
         }

@@ -277,9 +277,11 @@ prohori/
 ├── test.sh              # Live preview script with preset argument support
 ├── install.sh           # One-step multi-distro installer script
 ├── themes/              # Handcrafted theme preset definitions
+│   ├── astral.conf      # Prohori Astral (Cybernetic stacked typography & constellation mesh)
 │   ├── minimal.conf     # Prohori Minimal (Modern architectural layout with falling dust motes)
 │   └── default.conf     # Prohori Classic (Dialer layout with obsidian navy background)
 ├── backgrounds/         # Background assets
+│   ├── astral.jpg       # Cosmic abyss with micro-starfield matrix
 │   ├── minimal.jpg      # Minimal clean obsidian slate background
 │   └── default.jpg      # Classic obsidian navy background
 ├── screenshots/         # Documentation screenshots

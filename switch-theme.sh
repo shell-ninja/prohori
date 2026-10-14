@@ -6,10 +6,18 @@
 
 set -e
 
-THEME_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+# Resolve symlinks so the script works when invoked via symlinks (e.g. /usr/local/bin/prohori-theme)
+SCRIPT_SOURCE="${BASH_SOURCE[0]}"
+while [ -L "$SCRIPT_SOURCE" ]; do
+    SCRIPT_DIR="$(cd -P "$(dirname "$SCRIPT_SOURCE")" >/dev/null 2>&1 && pwd)"
+    SCRIPT_SOURCE="$(readlink "$SCRIPT_SOURCE")"
+    [[ "$SCRIPT_SOURCE" != /* ]] && SCRIPT_SOURCE="$SCRIPT_DIR/$SCRIPT_SOURCE"
+done
+THEME_DIR="$(cd -P "$(dirname "$SCRIPT_SOURCE")" >/dev/null 2>&1 && pwd)"
 PRESETS_DIR="${THEME_DIR}/themes"
 THEME_CONF="${THEME_DIR}/theme.conf"
 SYSTEM_THEME_DIR="/usr/share/sddm/themes/prohori"
+
 
 # Terminal Color Palette
 C_RESET="\033[0m"
@@ -45,7 +53,9 @@ EOF
 THEMES=(
     "default|Prohori Classic|#38bdf8|Iconic orbital concentric chronometer dials on deep obsidian navy"
     "minimal|Prohori Minimal|#00f5a0|Architectural monolithic digital clock, live kinetic millisecond sweep & floating auth dock"
+    "astral|Prohori Astral|#b026ff|Stacked architectural typography, cybernetic telemetry & constellation mesh on cosmic abyss"
 )
+
 
 # Helper to extract value from theme.conf
 get_conf_value() {
@@ -139,12 +149,24 @@ apply_preset() {
     local applied_name
     applied_name=$(get_conf_value "$preset_file" "themeName")
 
-    # Copy preset to local theme.conf
-    cp "$preset_file" "$THEME_CONF"
+    # Copy preset to target theme.conf
+    if [[ "$THEME_DIR" == "$SYSTEM_THEME_DIR" && $EUID -ne 0 ]]; then
+        if command -v sudo >/dev/null 2>&1; then
+            sudo cp "$preset_file" "$THEME_CONF"
+            sudo chmod 644 "$THEME_CONF" 2>/dev/null || true
+        elif command -v doas >/dev/null 2>&1; then
+            doas cp "$preset_file" "$THEME_CONF"
+            doas chmod 644 "$THEME_CONF" 2>/dev/null || true
+        else
+            cp "$preset_file" "$THEME_CONF"
+        fi
+    else
+        cp "$preset_file" "$THEME_CONF"
+    fi
     echo -e "${C_BGREEN}[SUCCESS]${C_RESET} Applied theme: ${C_BOLD}${applied_name}${C_RESET}"
     echo -e "Configuration written to: ${C_GRAY}${THEME_CONF}${C_RESET}"
 
-    # Sync to system if explicitly requested
+    # Sync to system if explicitly requested and running locally
     if [[ "$do_system" == "true" || "$do_system" == "1" ]]; then
         sync_to_system
     fi
@@ -155,6 +177,12 @@ apply_preset() {
 sync_to_system() {
     if [[ ! -d "$SYSTEM_THEME_DIR" ]]; then
         echo -e "${C_YELLOW}[INFO]${C_RESET} System theme directory ${SYSTEM_THEME_DIR} not found. Theme is only active locally."
+        return 0
+    fi
+
+    if [[ "$THEME_DIR" == "$SYSTEM_THEME_DIR" ]]; then
+        chmod 644 "${SYSTEM_THEME_DIR}/theme.conf" 2>/dev/null || true
+        echo -e "${C_BGREEN}[SUCCESS]${C_RESET} System-wide SDDM theme updated successfully!"
         return 0
     fi
 
@@ -198,8 +226,20 @@ set_custom_wallpaper() {
 run_test() {
     echo ""
     echo -e "${C_BCYAN}[PREVIEW]${C_RESET} Launching SDDM greeter in test mode..."
-    "${THEME_DIR}/test.sh"
+    if [[ $EUID -eq 0 && -n "${SUDO_USER:-}" ]]; then
+        local user_uid
+        user_uid=$(id -u "$SUDO_USER")
+        sudo -u "$SUDO_USER" \
+            WAYLAND_DISPLAY="${WAYLAND_DISPLAY:-wayland-1}" \
+            XDG_RUNTIME_DIR="${XDG_RUNTIME_DIR:-/run/user/${user_uid}}" \
+            XAUTHORITY="${XAUTHORITY:-/home/${SUDO_USER}/.Xauthority}" \
+            DISPLAY="${DISPLAY:-:0}" \
+            "${THEME_DIR}/test.sh" || true
+    else
+        "${THEME_DIR}/test.sh" || true
+    fi
 }
+
 
 # Interactive Menu
 interactive_menu() {
