@@ -2,6 +2,8 @@
 set -e
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+PRESETS_DIR="${SCRIPT_DIR}/themes"
+THEME_CONF="${SCRIPT_DIR}/theme.conf"
 
 # Check for sddm greeter
 if command -v sddm-greeter-qt6 >/dev/null 2>&1; then
@@ -13,7 +15,36 @@ else
     exit 1
 fi
 
-echo -e "\033[0;32m[Previewing SDDM Theme]\033[0m: ${SCRIPT_DIR}"
+# If a theme preset is specified, apply it first
+if [[ $# -gt 0 && ! "$1" =~ ^- ]]; then
+    THEME_ARG="$1"
+    shift
+    PRESET_FILE=""
+
+    if [[ -f "${PRESETS_DIR}/${THEME_ARG}.conf" ]]; then
+        PRESET_FILE="${PRESETS_DIR}/${THEME_ARG}.conf"
+    else
+        # Fuzzy match
+        for f in "${PRESETS_DIR}"/*.conf; do
+            base="$(basename "$f" .conf)"
+            if [[ "${base,,}" == *"${THEME_ARG,,}"* ]]; then
+                PRESET_FILE="$f"
+                break
+            fi
+        done
+    fi
+
+    if [[ -n "$PRESET_FILE" && -f "$PRESET_FILE" ]]; then
+        cp "$PRESET_FILE" "$THEME_CONF"
+        THEME_NAME=$(grep "^themeName=" "$THEME_CONF" | head -n 1 | cut -d'=' -f2- | tr -d '"\r')
+        echo -e "\033[0;32m[Applied Preset]\033[0m: ${THEME_NAME:-$THEME_ARG}"
+    else
+        echo -e "\033[0;33m[Notice]\033[0m: Unknown preset '${THEME_ARG}', running with current theme.conf"
+    fi
+fi
+
+CURRENT_THEME=$(grep "^themeName=" "$THEME_CONF" 2>/dev/null | head -n 1 | cut -d'=' -f2- | tr -d '"\r' || echo "Prohori")
+echo -e "\033[0;32m[Previewing SDDM Theme]\033[0m: ${CURRENT_THEME} (${SCRIPT_DIR})"
 echo "Using greeter: ${GREETER}"
 
 # Run greeter in test mode

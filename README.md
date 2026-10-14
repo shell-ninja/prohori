@@ -35,9 +35,16 @@ This theme was inspired by the **Ryoku** lockscreen and login environment design
 
 - **Orbital Dial Clock**:
   - Live rotating concentric tracks for minutes and seconds with dynamic spotlight illumination.
-  - Symmetrical indicator capsule pill featuring dual alignment ticks and a center divider.
-  - Large bold hour counter (supports both 12-hour and 24-hour modes).
+  - Symmetrical indicator capsule pill featuring accent-illuminated alignment ticks and a center divider.
+  - Concentric circular chronometer guide tracks framing the orbital dial.
+  - Large bold hour counter with integrated `AM` / `PM` / `24H` micro-badge.
   - Clean uppercase date and day-of-week display.
+- **Dynamic Atmospheric Lighting**:
+  - Ambient radial backlight behind the clock dynamically tinted to match each theme's accent color.
+  - Contrast dimmer layer ensuring maximum legibility across custom wallpapers.
+- **Preset System & Theme Switcher**:
+  - 9 handcrafted presets for popular desktop rice aesthetics (Cyberpunk, Nord, Catppuccin, Tokyo Night, Matrix Emerald, Blood Moon, OLED Stealth, Amber Horizon, Prohori Classic).
+  - CLI and interactive switcher script (`./switch-theme.sh` / `prohori-theme`).
 - **Display & Hardware Optimization**:
   - **All Resolutions**: Proportional dynamic scaling that fits cleanly across 720p, 1080p, 2K (1440p), 4K (2160p), 16:10 laptop screens, and 21:9 ultrawide monitors without clipping.
   - **High Refresh Rate Sync**: Powered by Qt's native `FrameAnimation` synchronized directly with your display's VSync loop (60Hz, 75Hz, 120Hz, 144Hz, 165Hz, 240Hz+).
@@ -47,14 +54,14 @@ This theme was inspired by the **Ryoku** lockscreen and login environment design
 - **Bottom-Right Login Form**:
   - Username display with multi-user dropdown support (auto-detects and prioritizes the primary user).
   - Clean bullet-masked (`•`) password input with vertical pulsing needle cursor.
-  - `TYPE PASSWORD OR FIDO PIN` subtitle and `TRY TOUCH ONLY` prompt.
+  - Customizable security subtitle and prompt labels.
   - Smooth login transition with shake animation and `ACCESS DENIED` feedback on invalid attempts.
   - Suppressed virtual keyboard popup by default (preserves dial clock visuals without overlay obstructions).
 - **System Dashboard (`>_`)**:
-  - Corner badge toggling a quick flyout drawer displaying system hostname, session type, and a live 12h / 24h toggle.
+  - Corner badge toggling a quick flyout drawer displaying system hostname, session type, active theme name, and a live 12h / 24h toggle.
 - **Zero External Font Dependencies**:
   - Bundled typography (`Outfit` static weights: Regular, Medium, SemiBold, Bold, and Black) in `fonts/`.
-  - Built-in atmospheric dark radial gradient in `backgrounds/`.
+  - Curated minimalist wallpapers included in `backgrounds/`.
 
 ---
 
@@ -123,37 +130,114 @@ To test and interact with the theme in a preview window without logging out or r
 
 ---
 
+## Handcrafted Theme Presets
+
+Prohori comes bundled with 2 curated theme presets in `themes/`:
+
+| Preset Key | Theme Name | Accent | Mood & Aesthetic |
+| :--- | :--- | :--- | :--- |
+| `minimal` | **Prohori Minimal** | `#00f5a0` | Architectural monolithic digital clock, kinetic seconds sweep, floating auth dock & deep emerald mint ambient aura (`backgrounds/minimal.jpg`) |
+| `default` | **Prohori Classic** | `#38bdf8` | Iconic orbital concentric chronometer dials on deep obsidian navy (`backgrounds/default.jpg`) |
+
+---
+
+## Switching Themes (`switch-theme.sh`)
+
+You can switch themes interactively or via CLI commands using `./switch-theme.sh` (or `prohori-theme` once installed):
+
+### 1. Interactive Menu
+Simply run the script with no arguments to launch the interactive terminal menu:
+```bash
+./switch-theme.sh
+```
+Shows all themes with active indicators, lets you pick by number or name, and offers to launch a live test preview immediately.
+
+### 2. Direct Switching via CLI
+```bash
+# Switch to Prohori Minimal (Modern architectural layout)
+./switch-theme.sh minimal
+
+# Switch to Prohori Minimal and immediately preview live
+./switch-theme.sh minimal --test
+
+# Switch to Prohori Classic (Orbital dialer layout)
+./switch-theme.sh default
+
+# List all available presets
+./switch-theme.sh --list
+
+# Show currently applied theme
+./switch-theme.sh --current
+
+# Set a custom wallpaper image
+./switch-theme.sh --wallpaper ~/Pictures/wallpapers/neon.png
+
+# Sync local changes to system SDDM directory (/usr/share/sddm/themes/prohori)
+./switch-theme.sh --sync
+```
+
+---
+
+## Testing Themes Locally (`test-theme.sh` & `test.sh`)
+
+Before running the installation script, you can preview and test the theme presets directly from this directory without touching any system files:
+
+### 1. Interactive Test Menu
+```bash
+./test-theme.sh
+```
+Launches an interactive loop. Choose any theme number (1–2) or key to immediately open its live SDDM preview window. Closing the preview window automatically returns you to the menu to test another theme.
+
+### 2. Tour All Themes in Sequence
+```bash
+./test-theme.sh all
+```
+Cycles through the theme presets one after another. Close each window to automatically load the next theme.
+
+### 3. Direct One-Line Test
+```bash
+# Test a theme directly using test.sh:
+./test.sh minimal
+./test.sh default
+
+# Or with test-theme.sh:
+./test-theme.sh minimal
+./test-theme.sh default
+```
+
+---
+
 ## Customization (`theme.conf`)
 
-Edit `theme.conf` in the theme directory to customize options:
+Edit `theme.conf` in the theme directory to customize options manually:
 
 ```ini
 [General]
-# Visual mode: "dark" or "light"
+themeName="Prohori Classic"
 themeMode="dark"
-
-# Clock format: "12" or "24"
 hourFormat="12"
-
-# Background wallpaper image (path relative to theme root, or absolute path)
 background="backgrounds/default.jpg"
-
-# Login animation
+backgroundDim="0.0"
 enableWindup=true
-
-# Virtual on-screen keyboard: false (default, keeps keyboard closed) or true
 enableVirtualKeyboard=false
-
-# Authentication text labels
 authSubtitle="TYPE PASSWORD OR FIDO PIN"
 authPrompt="TRY TOUCH ONLY"
 
 # Color Palette
 mainTextColor="#faf5ee"
-dimTextColor="#6b7c93"
+dimTextColor="#64748b"
 subTextColor="#94a3b8"
 accentColor="#38bdf8"
-errorColor="#f87171"
+errorColor="#ef4444"
+
+# Dial pill styling
+pillColor="#0f1621"
+pillBorder="#243242"
+pillInnerLine="#3b4d61"
+
+# Ambient radial glow & chronometer tracks
+ambientGlowColor="#1e324a"
+showOrbitTracks=true
 ```
 
 ---
@@ -185,17 +269,22 @@ InputMethod=
 
 ```
 prohori/
-├── Main.qml             # Core QML interface and dial engine
+├── Main.qml             # Core QML interface, orbital dial engine & dashboard
 ├── metadata.desktop     # SDDM theme metadata
-├── theme.conf           # User-customizable settings
-├── test.sh              # Live preview script using sddm-greeter-qt6
+├── theme.conf           # Active theme configuration
+├── test-theme.sh        # Dedicated local theme test runner & tour
+├── switch-theme.sh      # Interactive & CLI theme preset switcher
+├── test.sh              # Live preview script with preset argument support
 ├── install.sh           # One-step multi-distro installer script
+├── themes/              # Handcrafted theme preset definitions
+│   ├── minimal.conf     # Prohori Minimal (Modern architectural layout with falling dust motes)
+│   └── default.conf     # Prohori Classic (Dialer layout with obsidian navy background)
+├── backgrounds/         # Background assets
+│   ├── minimal.jpg      # Minimal clean obsidian slate background
+│   └── default.jpg      # Classic obsidian navy background
 ├── screenshots/         # Documentation screenshots
 │   ├── main.png
 │   └── dashboard.png
-├── backgrounds/         # Default background and custom wallpaper support
-│   ├── default.jpg
-│   └── default.png
 └── fonts/               # Bundled Outfit font files
     ├── Outfit-Black.ttf
     ├── Outfit-Bold.ttf

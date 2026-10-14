@@ -8,7 +8,7 @@ Rectangle {
     id: root
     width: parent ? parent.width : Screen.width
     height: parent ? parent.height : Screen.height
-    color: "#080c12"
+    color: root.backgroundColor
 
     // Responsive scaling factor supporting 720p, 1080p, 2K (1440p), 4K (2160p), 16:10 & Ultrawide
     readonly property real scaleFactor: Math.min(width / 1920.0, height / 1080.0)
@@ -22,28 +22,54 @@ Rectangle {
         onClicked: {
             root.userMenuOpen = false
             root.sessionMenuOpen = false
-            passInput.forceActiveFocus()
-            if (!root.enableVirtualKeyboard) Qt.inputMethod.hide()
+            root.focusActiveInput()
         }
     }
 
     // Config options with safe fallbacks
+    readonly property string themeName: (typeof config !== "undefined" && config.themeName) ? config.themeName : "Prohori Classic"
+    readonly property string themeLayout: (typeof config !== "undefined" && config.themeLayout) ? config.themeLayout : (themeName.toLowerCase().indexOf("minimal") !== -1 ? "minimal" : "dialer")
+    readonly property bool isMinimalLayout: themeLayout === "minimal"
     readonly property string themeMode: (typeof config !== "undefined" && config.themeMode) ? config.themeMode : "dark"
     readonly property bool isLight: themeMode === "light"
+    readonly property color backgroundColor: (typeof config !== "undefined" && config.backgroundColor) ? config.backgroundColor : (isLight ? "#f8fafc" : "#080c12")
+    readonly property bool hasBackground: typeof config !== "undefined" && config.background !== undefined && config.background !== "" && config.background !== "none"
     readonly property bool enableWindup: typeof config === "undefined" || (config.enableWindup !== "false" && config.enableWindup !== false)
     property string hourFormat: (typeof config !== "undefined" && config.hourFormat) ? config.hourFormat : "12"
     readonly property bool enableVirtualKeyboard: (typeof config !== "undefined" && config.enableVirtualKeyboard !== undefined) ? (config.enableVirtualKeyboard === "true" || config.enableVirtualKeyboard === true) : false
 
+    function focusActiveInput() {
+        if (root.isMinimalLayout) {
+            if (typeof minPassInput !== "undefined" && minPassInput) minPassInput.forceActiveFocus()
+        } else {
+            if (typeof passInput !== "undefined" && passInput) passInput.forceActiveFocus()
+        }
+        if (!root.enableVirtualKeyboard) Qt.inputMethod.hide()
+    }
+
     // Clean, authentic minimal color palette (no artificial sparkles/flares)
+    property bool isErrorState: false
+    property real shakeOffset: 0
     readonly property color mainTextColor: isLight ? "#111827" : ((typeof config !== "undefined" && config.mainTextColor) ? config.mainTextColor : "#faf5ee")
     readonly property color dimTextColor: isLight ? "#6b7280" : ((typeof config !== "undefined" && config.dimTextColor) ? config.dimTextColor : "#6b7c93")
     readonly property color subTextColor: isLight ? "#4b5563" : ((typeof config !== "undefined" && config.subTextColor) ? config.subTextColor : "#94a3b8")
-    readonly property color accentColor: (typeof config !== "undefined" && config.accentColor) ? config.accentColor : "#38bdf8"
-    readonly property color errorColor: (typeof config !== "undefined" && config.errorColor) ? config.errorColor : "#f87171"
+    readonly property color errorColor: (typeof config !== "undefined" && config.errorColor) ? config.errorColor : "#ff3366"
+    readonly property color normalAccentColor: (typeof config !== "undefined" && config.accentColor) ? config.accentColor : "#38bdf8"
+    property color accentColor: root.isErrorState ? root.errorColor : root.normalAccentColor
+
+    Behavior on accentColor { ColorAnimation { duration: 250 } }
 
     readonly property color pillColor: isLight ? "#f1f5f9" : ((typeof config !== "undefined" && config.pillColor) ? config.pillColor : "#0d1520")
     readonly property color pillBorder: isLight ? "#cbd5e1" : ((typeof config !== "undefined" && config.pillBorder) ? config.pillBorder : "#1b2636")
     readonly property color pillInnerLine: isLight ? "#94a3b8" : ((typeof config !== "undefined" && config.pillInnerLine) ? config.pillInnerLine : "#2c3e55")
+
+    readonly property bool enableAmbientGlow: (typeof config !== "undefined" && config.enableAmbientGlow !== undefined) ? (config.enableAmbientGlow === "true" || config.enableAmbientGlow === true) : false
+    readonly property color ambientGlowColor: (typeof config !== "undefined" && config.ambientGlowColor) ? config.ambientGlowColor : Qt.rgba(accentColor.r, accentColor.g, accentColor.b, 0.15)
+    readonly property color ambientDimColor: (typeof config !== "undefined" && config.ambientDimColor) ? config.ambientDimColor : (isLight ? Qt.rgba(1, 1, 1, 0.06) : "#0d141e")
+    readonly property real backgroundDim: (typeof config !== "undefined" && config.backgroundDim !== undefined) ? Number(config.backgroundDim) : 0.0
+    readonly property bool showOrbitTracks: typeof config === "undefined" || (config.showOrbitTracks !== "false" && config.showOrbitTracks !== false)
+    readonly property bool enableDustParticles: (typeof config !== "undefined" && config.enableDustParticles !== undefined) ? (config.enableDustParticles === "true" || config.enableDustParticles === true) : root.isMinimalLayout
+
 
     readonly property string authSubtitle: (typeof config !== "undefined" && config.authSubtitle) ? config.authSubtitle : "TYPE PASSWORD OR FIDO PIN"
     readonly property string authPrompt: (typeof config !== "undefined" && config.authPrompt) ? config.authPrompt : "TRY TOUCH ONLY"
@@ -195,8 +221,7 @@ Rectangle {
         interval: 250
         running: true
         onTriggered: {
-            passInput.forceActiveFocus()
-            if (!root.enableVirtualKeyboard) Qt.inputMethod.hide()
+            root.focusActiveInput()
         }
     }
 
@@ -240,24 +265,140 @@ Rectangle {
             id: bgImage
             anchors.fill: parent
             fillMode: Image.PreserveAspectCrop
-            source: (typeof config !== "undefined" && config.background) ? config.background : "backgrounds/default.jpg"
+            source: root.hasBackground ? config.background : ""
+            visible: root.hasBackground && status === Image.Ready
             asynchronous: true
             cache: true
         }
 
-        // Ambient radial illumination behind dial clock
-        RadialGradient {
+        // Contrast Dimmer for custom wallpapers
+        Rectangle {
             anchors.fill: parent
-            horizontalOffset: -parent.width * 0.16
-            verticalOffset: parent.height * 0.02
-            horizontalRadius: parent.width * 0.60
-            verticalRadius: parent.height * 0.70
+            color: "#000000"
+            opacity: root.backgroundDim
+            visible: opacity > 0
+        }
+
+        // Ambient radial illumination behind clock (only if enableAmbientGlow=true)
+        RadialGradient {
+            visible: root.enableAmbientGlow
+            anchors.fill: parent
+            horizontalOffset: root.isMinimalLayout ? -parent.width * 0.14 : -parent.width * 0.16
+            verticalOffset: root.isMinimalLayout ? -parent.height * 0.06 : parent.height * 0.02
+            horizontalRadius: parent.width * 0.58
+            verticalRadius: parent.height * 0.68
             gradient: Gradient {
-                GradientStop { position: 0.0; color: root.isLight ? "#25ffffff" : "#2a3d54" }
-                GradientStop { position: 0.45; color: root.isLight ? "#10ffffff" : "#121a26" }
+                GradientStop { position: 0.0; color: root.ambientGlowColor }
+                GradientStop { position: 0.45; color: root.ambientDimColor }
                 GradientStop { position: 1.0; color: "transparent" }
             }
-            opacity: 0.90
+        }
+    }
+
+    // Ambient Falling Dust Layer (Soft, subtle micro-particles drifting from top)
+    Item {
+        id: dustLayer
+        anchors.fill: parent
+        z: 2
+        visible: root.enableDustParticles
+        opacity: root.uiOpacity
+
+        Repeater {
+            model: 32
+            delegate: Item {
+                id: particle
+
+                // Deterministic pseudo-random distribution per particle index
+                readonly property real s1: ((index * 37 + 13) % 100) / 100.0
+                readonly property real s2: ((index * 59 + 29) % 100) / 100.0
+                readonly property real s3: ((index * 83 + 47) % 100) / 100.0
+                readonly property real s4: ((index * 97 + 71) % 100) / 100.0
+
+                // Small micro-dust dimensions (1.2px - 2.8px)
+                readonly property real pSize: Math.max(1.2, (1.2 + s1 * 1.6) * root.s)
+                readonly property real baseOpacity: 0.15 + s2 * 0.25
+                readonly property real baseX: (index / 32.0) * dustLayer.width + (s3 - 0.5) * (dustLayer.width / 16.0)
+                readonly property int fallDuration: Math.round(11000 + s4 * 8000)
+                readonly property real initialY: s2 * (dustLayer.height + 40) - 20
+
+                x: baseX + swayX
+                y: curY
+
+                property real curY: initialY
+                property real swayX: 0
+
+                // Micro dust speck
+                Rectangle {
+                    width: particle.pSize
+                    height: particle.pSize
+                    radius: width * 0.5
+                    color: root.accentColor
+                    opacity: particle.baseOpacity
+                }
+
+                // Smooth vertical descent with staggered initial launch
+                SequentialAnimation {
+                    running: dustLayer.visible
+                    NumberAnimation {
+                        target: particle
+                        property: "curY"
+                        from: particle.initialY
+                        to: dustLayer.height + 20
+                        duration: Math.max(500, Math.round(particle.fallDuration * (1.0 - (particle.initialY + 20) / (dustLayer.height + 40))))
+                    }
+                    NumberAnimation {
+                        target: particle
+                        property: "curY"
+                        from: -20
+                        to: dustLayer.height + 20
+                        duration: particle.fallDuration
+                        loops: Animation.Infinite
+                    }
+                }
+
+                // Gentle atmospheric horizontal sway
+                SequentialAnimation {
+                    loops: Animation.Infinite
+                    running: dustLayer.visible
+                    NumberAnimation {
+                        target: particle
+                        property: "swayX"
+                        to: 10 + particle.s1 * 14
+                        duration: Math.round(3000 + particle.s3 * 2500)
+                        easing.type: Easing.InOutSine
+                    }
+                    NumberAnimation {
+                        target: particle
+                        property: "swayX"
+                        to: -(10 + particle.s1 * 14)
+                        duration: Math.round(3200 + particle.s4 * 2500)
+                        easing.type: Easing.InOutSine
+                    }
+                }
+            }
+        }
+    }
+
+    // Error Alert Vignette Overlay (Red pulse on authentication failure)
+    Rectangle {
+        id: errorAlertOverlay
+        anchors.fill: parent
+        z: 3
+        color: "transparent"
+        visible: opacity > 0
+        opacity: root.isErrorState ? 1.0 : 0.0
+
+        Behavior on opacity { NumberAnimation { duration: 280 } }
+
+        RadialGradient {
+            anchors.fill: parent
+            horizontalRadius: parent.width * 0.75
+            verticalRadius: parent.height * 0.75
+            gradient: Gradient {
+                GradientStop { position: 0.0; color: "transparent" }
+                GradientStop { position: 0.65; color: Qt.rgba(255/255, 30/255, 60/255, 0.06) }
+                GradientStop { position: 1.0; color: Qt.rgba(255/255, 20/255, 50/255, 0.28) }
+            }
         }
     }
 
@@ -267,10 +408,12 @@ Rectangle {
         anchors.fill: parent
         z: 10
         opacity: root.uiOpacity
+        transform: Translate { x: root.shakeOffset }
 
         // Clock & Dials Section (Left)
         Item {
             id: clockContainer
+            visible: !root.isMinimalLayout
             anchors.left: parent.left
             anchors.verticalCenter: parent.verticalCenter
             width: parent.width * 0.65
@@ -281,6 +424,35 @@ Rectangle {
             readonly property real cy: height * 0.5
             readonly property real minR: 380 * s
             readonly property real secR: 570 * s
+
+            // Concentric Chronometer Orbit Guide Tracks
+            Rectangle {
+                id: minOrbitRing
+                visible: root.showOrbitTracks
+                z: 1
+                x: clockContainer.cx - clockContainer.minR
+                y: clockContainer.cy - clockContainer.minR
+                width: clockContainer.minR * 2
+                height: clockContainer.minR * 2
+                radius: clockContainer.minR
+                color: "transparent"
+                border.color: root.isLight ? Qt.rgba(0, 0, 0, 0.08) : Qt.rgba(1, 1, 1, 0.08)
+                border.width: 1 * s
+            }
+
+            Rectangle {
+                id: secOrbitRing
+                visible: root.showOrbitTracks
+                z: 1
+                x: clockContainer.cx - clockContainer.secR
+                y: clockContainer.cy - clockContainer.secR
+                width: clockContainer.secR * 2
+                height: clockContainer.secR * 2
+                radius: clockContainer.secR
+                color: "transparent"
+                border.color: root.isLight ? Qt.rgba(0, 0, 0, 0.08) : Qt.rgba(1, 1, 1, 0.06)
+                border.width: 1 * s
+            }
 
             // Horizontal Capsule Indicator Pill
             Rectangle {
@@ -303,7 +475,7 @@ Rectangle {
                     width: 20 * s
                     height: 3 * s
                     radius: 1.5 * s
-                    color: root.mainTextColor
+                    color: root.accentColor
                 }
 
                 // Center Vertical Separator Line
@@ -322,7 +494,7 @@ Rectangle {
                     width: 20 * s
                     height: 3 * s
                     radius: 1.5 * s
-                    color: root.mainTextColor
+                    color: root.accentColor
                 }
             }
 
@@ -457,17 +629,43 @@ Rectangle {
                 anchors.left: indicatorPill.right
                 anchors.leftMargin: 85 * s
                 anchors.verticalCenter: parent.verticalCenter
-                spacing: 5 * s
+                spacing: 6 * s
 
-                Text {
-                    text: Qt.formatDate(new Date(), "dd MMM yyyy").toUpperCase()
-                    font.family: root.semiBoldFont
-                    font.pixelSize: 15 * s
-                    font.letterSpacing: 4 * s
-                    font.weight: Font.DemiBold
-                    color: root.subTextColor
-                    antialiasing: true
-                    renderType: Text.NativeRendering
+                Row {
+                    spacing: 12 * s
+                    Text {
+                        text: Qt.formatDate(new Date(), "dd MMM yyyy").toUpperCase()
+                        font.family: root.semiBoldFont
+                        font.pixelSize: 15 * s
+                        font.letterSpacing: 4 * s
+                        font.weight: Font.DemiBold
+                        color: root.subTextColor
+                        antialiasing: true
+                        renderType: Text.NativeRendering
+                        anchors.verticalCenter: parent.verticalCenter
+                    }
+
+                    // AM / PM / 24H Period Indicator Badge
+                    Rectangle {
+                        anchors.verticalCenter: parent.verticalCenter
+                        width: 36 * s
+                        height: 18 * s
+                        radius: 4 * s
+                        color: Qt.rgba(root.accentColor.r, root.accentColor.g, root.accentColor.b, 0.15)
+                        border.color: Qt.rgba(root.accentColor.r, root.accentColor.g, root.accentColor.b, 0.40)
+                        border.width: 1 * s
+
+                        Text {
+                            anchors.centerIn: parent
+                            text: root.hourFormat === "12" ? (root.curH >= 12 ? "PM" : "AM") : "24H"
+                            font.family: root.boldFont
+                            font.pixelSize: 9 * s
+                            font.letterSpacing: 1.5 * s
+                            font.weight: Font.Bold
+                            color: root.accentColor
+                            renderType: Text.NativeRendering
+                        }
+                    }
                 }
 
                 Text {
@@ -494,10 +692,10 @@ Rectangle {
         Row {
             id: hudRow
             anchors.right: parent.right
-            anchors.rightMargin: root.marginR
+            anchors.rightMargin: root.isMinimalLayout ? 130 * s : root.marginR
             anchors.top: parent.top
-            anchors.topMargin: 50 * s
-            spacing: 45 * s
+            anchors.topMargin: 46 * s
+            spacing: 12 * s
 
             // Reboot Action
             CwAction {
@@ -518,7 +716,8 @@ Rectangle {
             // Session Selector
             CwAction {
                 id: sessionBtn
-                label: root.currentSessionDisplayName
+                label: root.currentSessionDisplayName + (root.sessionMenuOpen ? " ▲" : " ▼")
+                isActive: root.sessionMenuOpen
                 onClicked: {
                     if (typeof sessionModel !== "undefined" && sessionModel.rowCount() > 1) {
                         root.sessionMenuOpen = !root.sessionMenuOpen
@@ -535,16 +734,16 @@ Rectangle {
             id: sessionDropdown
             z: 7000
             anchors.top: parent.top
-            anchors.topMargin: 85 * s
+            anchors.topMargin: 88 * s
             anchors.right: parent.right
-            anchors.rightMargin: root.marginR
-            width: 240 * s
-            height: root.sessionMenuOpen ? Math.min(300 * s, ((typeof sessionModel !== "undefined" ? sessionModel.rowCount() : 1) * 38 * s) + 16 * s) : 0
+            anchors.rightMargin: root.isMinimalLayout ? 130 * s : root.marginR
+            width: 250 * s
+            height: root.sessionMenuOpen ? Math.min(300 * s, ((typeof sessionModel !== "undefined" ? sessionModel.rowCount() : 1) * 44 * s) + 20 * s) : 0
             clip: true
-            radius: 8 * s
-            color: root.isLight ? "#f8fafc" : "#0d141e"
-            border.color: root.pillBorder
-            border.width: 1 * s
+            radius: 14 * s
+            color: root.isLight ? "#f8fafc" : Qt.rgba(12/255, 17/255, 26/255, 0.92)
+            border.color: Qt.rgba(255, 255, 255, 0.10)
+            border.width: 1.5 * s
             visible: height > 0
 
             Behavior on height { NumberAnimation { duration: 250; easing.type: Easing.OutCubic } }
@@ -552,29 +751,55 @@ Rectangle {
             ListView {
                 anchors.fill: parent
                 anchors.margins: 8 * s
+                spacing: 4 * s
                 model: typeof sessionModel !== "undefined" ? sessionModel : null
                 delegate: Item {
                     width: parent.width
-                    height: 34 * s
+                    height: 38 * s
                     property bool itemHover: sItemMa.containsMouse
 
                     Rectangle {
                         anchors.fill: parent
-                        radius: 4 * s
-                        color: (root.sessionIndex === index) ? (root.isLight ? "#e2e8f0" : "#1a2534") : (itemHover ? (root.isLight ? "#f1f5f9" : "#141c26") : "transparent")
+                        radius: 8 * s
+                        color: (root.sessionIndex === index)
+                               ? Qt.rgba(root.accentColor.r, root.accentColor.g, root.accentColor.b, 0.14)
+                               : (itemHover ? Qt.rgba(255, 255, 255, 0.06) : "transparent")
+                        border.color: (root.sessionIndex === index)
+                                      ? Qt.rgba(root.accentColor.r, root.accentColor.g, root.accentColor.b, 0.40)
+                                      : "transparent"
+                        border.width: 1 * s
+
+                        Behavior on color { ColorAnimation { duration: 150 } }
                     }
 
-                    Text {
+                    Row {
                         anchors.left: parent.left
                         anchors.leftMargin: 12 * s
+                        anchors.right: parent.right
+                        anchors.rightMargin: 12 * s
                         anchors.verticalCenter: parent.verticalCenter
-                        text: root.formatSessionName(model.name || "")
-                        font.family: root.boldFont
-                        font.pixelSize: 13 * s
-                        font.letterSpacing: 2 * s
-                        font.weight: Font.Bold
-                        color: (root.sessionIndex === index || itemHover) ? root.mainTextColor : root.dimTextColor
-                        renderType: Text.NativeRendering
+                        spacing: 10 * s
+
+                        // Active Session Indicator Dot
+                        Rectangle {
+                            width: 6 * s
+                            height: 6 * s
+                            radius: 3 * s
+                            color: (root.sessionIndex === index) ? root.accentColor : "transparent"
+                            anchors.verticalCenter: parent.verticalCenter
+                        }
+
+                        Text {
+                            text: root.formatSessionName(model.name || "")
+                            font.family: root.boldFont
+                            font.pixelSize: 12 * s
+                            font.letterSpacing: 2 * s
+                            font.weight: Font.Bold
+                            color: (root.sessionIndex === index) ? root.accentColor : (itemHover ? root.mainTextColor : root.dimTextColor)
+                            renderType: Text.NativeRendering
+                            anchors.verticalCenter: parent.verticalCenter
+                            elide: Text.ElideRight
+                        }
                     }
 
                     MouseArea {
@@ -595,53 +820,137 @@ Rectangle {
         Rectangle {
             id: uMenuContainer
             z: 6000
-            anchors.bottom: loginPanel.top
-            anchors.bottomMargin: 14 * s
-            anchors.right: loginPanel.right
-            width: 260 * s
-            height: root.userMenuOpen ? Math.min(300 * s, ((typeof userModel !== "undefined" ? userModel.rowCount() : 1) * 38 * s) + 16 * s) : 0
+            anchors.right: parent.right
+            anchors.rightMargin: root.isMinimalLayout ? 130 * s : root.marginR
+            anchors.bottom: parent.bottom
+            anchors.bottomMargin: root.isMinimalLayout ? (parent.height * 0.5 + 155 * s) : 240 * s
+            width: root.isMinimalLayout ? 430 * s : 280 * s
+            height: root.userMenuOpen ? Math.min(320 * s, ((typeof userModel !== "undefined" ? userModel.rowCount() : 1) * 52 * s) + 40 * s) : 0
             clip: true
-            radius: 8 * s
-            color: root.isLight ? "#f8fafc" : "#0d141e"
-            border.color: root.pillBorder
-            border.width: 1 * s
+            radius: 16 * s
+            color: root.isLight ? "#f8fafc" : Qt.rgba(12/255, 17/255, 26/255, 0.94)
+            border.color: Qt.rgba(255, 255, 255, 0.10)
+            border.width: 1.5 * s
             visible: height > 0
 
             Behavior on height { NumberAnimation { duration: 250; easing.type: Easing.OutCubic } }
 
             Column {
                 anchors.fill: parent
-                anchors.margins: 8 * s
-                spacing: 4 * s
+                anchors.margins: 12 * s
+                spacing: 6 * s
+
+                // Header
+                Row {
+                    spacing: 8 * s
+                    Rectangle {
+                        width: 5 * s
+                        height: 5 * s
+                        radius: 2.5 * s
+                        color: root.accentColor
+                        anchors.verticalCenter: parent.verticalCenter
+                    }
+                    Text {
+                        text: "SELECT USER ACCOUNT"
+                        font.family: root.boldFont
+                        font.pixelSize: 10 * s
+                        font.letterSpacing: 2 * s
+                        font.weight: Font.Bold
+                        color: root.accentColor
+                        anchors.verticalCenter: parent.verticalCenter
+                    }
+                }
 
                 Repeater {
                     model: typeof userModel !== "undefined" ? userModel : null
                     delegate: Item {
                         width: parent.width
-                        height: 34 * s
+                        height: 44 * s
                         property bool itemHover: uItemMa.containsMouse
+                        readonly property string uDisplayName: {
+                            var rname = model.realName || ""
+                            var uname = model.name || ""
+                            return root.formatDisplayName((rname && rname.length > 0) ? rname : uname)
+                        }
 
                         Rectangle {
                             anchors.fill: parent
-                            radius: 4 * s
-                            color: (root.userIndex === index) ? (root.isLight ? "#e2e8f0" : "#1a2534") : (itemHover ? (root.isLight ? "#f1f5f9" : "#141c26") : "transparent")
+                            radius: 10 * s
+                            color: (root.userIndex === index)
+                                   ? Qt.rgba(root.accentColor.r, root.accentColor.g, root.accentColor.b, 0.14)
+                                   : (itemHover ? Qt.rgba(255, 255, 255, 0.06) : "transparent")
+                            border.color: (root.userIndex === index)
+                                          ? Qt.rgba(root.accentColor.r, root.accentColor.g, root.accentColor.b, 0.40)
+                                          : "transparent"
+                            border.width: 1 * s
+
+                            Behavior on color { ColorAnimation { duration: 150 } }
                         }
 
-                        Text {
-                            anchors.right: parent.right
-                            anchors.rightMargin: 12 * s
+                        Row {
+                            anchors.left: parent.left
+                            anchors.leftMargin: 10 * s
                             anchors.verticalCenter: parent.verticalCenter
-                            text: {
-                                var rname = model.realName || ""
-                                var uname = model.name || ""
-                                return root.formatDisplayName((rname && rname.length > 0) ? rname : uname)
+                            spacing: 12 * s
+
+                            // User Avatar Monogram Circle
+                            Rectangle {
+                                width: 28 * s
+                                height: 28 * s
+                                radius: 14 * s
+                                color: (root.userIndex === index)
+                                       ? Qt.rgba(root.accentColor.r, root.accentColor.g, root.accentColor.b, 0.20)
+                                       : Qt.rgba(255, 255, 255, 0.08)
+                                border.color: (root.userIndex === index)
+                                              ? root.accentColor
+                                              : Qt.rgba(255, 255, 255, 0.14)
+                                border.width: 1 * s
+                                anchors.verticalCenter: parent.verticalCenter
+
+                                Text {
+                                    anchors.centerIn: parent
+                                    text: uDisplayName.length > 0 ? uDisplayName.charAt(0) : "U"
+                                    font.family: root.boldFont
+                                    font.pixelSize: 12 * s
+                                    font.weight: Font.Black
+                                    color: (root.userIndex === index) ? root.accentColor : root.mainTextColor
+                                }
                             }
-                            font.family: root.boldFont
-                            font.pixelSize: 13 * s
-                            font.letterSpacing: 3 * s
-                            font.weight: Font.Bold
-                            color: (root.userIndex === index || itemHover) ? root.mainTextColor : root.dimTextColor
-                            renderType: Text.NativeRendering
+
+                            Text {
+                                text: uDisplayName
+                                font.family: root.boldFont
+                                font.pixelSize: 13 * s
+                                font.letterSpacing: 2 * s
+                                font.weight: Font.Bold
+                                color: (root.userIndex === index) ? root.accentColor : (itemHover ? root.mainTextColor : root.dimTextColor)
+                                renderType: Text.NativeRendering
+                                anchors.verticalCenter: parent.verticalCenter
+                            }
+                        }
+
+                        // Right Active Pill
+                        Rectangle {
+                            visible: root.userIndex === index
+                            anchors.right: parent.right
+                            anchors.rightMargin: 10 * s
+                            anchors.verticalCenter: parent.verticalCenter
+                            width: 58 * s
+                            height: 20 * s
+                            radius: 4 * s
+                            color: Qt.rgba(root.accentColor.r, root.accentColor.g, root.accentColor.b, 0.16)
+                            border.color: root.accentColor
+                            border.width: 1 * s
+
+                            Text {
+                                anchors.centerIn: parent
+                                text: "ACTIVE"
+                                font.family: root.boldFont
+                                font.pixelSize: 9 * s
+                                font.weight: Font.Black
+                                font.letterSpacing: 1.5 * s
+                                color: root.accentColor
+                            }
                         }
 
                         MouseArea {
@@ -653,8 +962,8 @@ Rectangle {
                                 root.userIndex = index
                                 root.userMenuOpen = false
                                 passInput.text = ""
-                                passInput.forceActiveFocus()
-                                if (!root.enableVirtualKeyboard) Qt.inputMethod.hide()
+                                if (typeof minPassInput !== "undefined" && minPassInput) minPassInput.text = ""
+                                root.focusActiveInput()
                             }
                         }
                     }
@@ -662,9 +971,10 @@ Rectangle {
             }
         }
 
-        // Bottom Right Login Form Section
+        // Bottom Right Login Form Section (Dialer Layout)
         Column {
             id: loginPanel
+            visible: !root.isMinimalLayout
             anchors.right: parent.right
             anchors.rightMargin: root.marginR
             anchors.bottom: parent.bottom
@@ -847,6 +1157,582 @@ Rectangle {
             }
         }
 
+        // =====================================================================
+        // Brand-New Modern Minimal Architecture Layout
+        // =====================================================================
+        Item {
+            id: minimalContainer
+            visible: root.isMinimalLayout
+            anchors.fill: parent
+
+            // 1. Viewfinder Crosshairs & Modern Architectural Frame Guides
+            Item {
+                id: frameGuides
+                anchors.fill: parent
+                opacity: 0.35
+
+                // Top Left Viewfinder Bracket & System Code
+                Row {
+                    x: 60 * s
+                    y: 50 * s
+                    spacing: 12 * s
+
+                    Text {
+                        text: "┌"
+                        font.family: root.boldFont
+                        font.pixelSize: 18 * s
+                        color: root.accentColor
+                    }
+
+                    Text {
+                        text: "PROHORI // SENTINEL CORE"
+                        font.family: root.boldFont
+                        font.pixelSize: 11 * s
+                        font.letterSpacing: 3 * s
+                        font.weight: Font.Bold
+                        color: root.dimTextColor
+                        anchors.verticalCenter: parent.verticalCenter
+                    }
+                }
+
+                // Bottom Left Telemetry Status
+                Row {
+                    x: 60 * s
+                    anchors.bottom: parent.bottom
+                    anchors.bottomMargin: 45 * s
+                    spacing: 10 * s
+
+                    Rectangle {
+                        width: 7 * s
+                        height: 7 * s
+                        radius: 3.5 * s
+                        color: root.accentColor
+                        anchors.verticalCenter: parent.verticalCenter
+
+                        SequentialAnimation on opacity {
+                            loops: Animation.Infinite
+                            NumberAnimation { from: 1.0; to: 0.25; duration: 1200; easing.type: Easing.InOutQuad }
+                            NumberAnimation { from: 0.25; to: 1.0; duration: 1200; easing.type: Easing.InOutQuad }
+                        }
+                    }
+
+                    Text {
+                        text: root.isErrorState
+                              ? "STATUS: SECURITY ALERT // ACCESS REJECTED"
+                              : (root.isLoggingIn ? "STATUS: AUTHENTICATING // VERIFYING CREDENTIALS" : "STATUS: ENCRYPTED // SYSTEM READY")
+                        font.family: root.boldFont
+                        font.pixelSize: 11 * s
+                        font.letterSpacing: 2 * s
+                        font.weight: Font.Bold
+                        color: root.isErrorState ? root.errorColor : (root.isLoggingIn ? root.accentColor : root.dimTextColor)
+                        anchors.verticalCenter: parent.verticalCenter
+
+                        Behavior on color { ColorAnimation { duration: 200 } }
+                    }
+                }
+
+                // Subtle Horizon Axis Rule Line across lower quadrant
+                Rectangle {
+                    anchors.left: parent.left
+                    anchors.leftMargin: 60 * s
+                    anchors.right: parent.right
+                    anchors.rightMargin: 60 * s
+                    anchors.bottom: parent.bottom
+                    anchors.bottomMargin: 75 * s
+                    height: 1 * s
+                    color: Qt.rgba(1, 1, 1, 0.05)
+                }
+            }
+
+            // 2. Left Hero Section: Monolithic Typographic Clock & Kinetic Sweep
+            Item {
+                id: minHeroClock
+                anchors.left: parent.left
+                anchors.leftMargin: 120 * s
+                anchors.verticalCenter: parent.verticalCenter
+                width: 650 * s
+                height: 380 * s
+
+                Column {
+                    anchors.fill: parent
+                    spacing: 14 * s
+
+                    // Precision Category Pill
+                    Row {
+                        spacing: 8 * s
+                        Rectangle {
+                            anchors.verticalCenter: parent.verticalCenter
+                            width: 6 * s
+                            height: 6 * s
+                            radius: 3 * s
+                            color: root.accentColor
+                        }
+                        Text {
+                            text: "CHRONO PRECISION // " + (root.hourFormat === "12" ? (root.curH >= 12 ? "PM" : "AM") : "24H")
+                            font.family: root.boldFont
+                            font.pixelSize: 12 * s
+                            font.letterSpacing: 4 * s
+                            font.weight: Font.Bold
+                            color: root.accentColor
+                            renderType: Text.NativeRendering
+                        }
+                    }
+
+                    // Monolithic Giant Digital Time Display
+                    Row {
+                        spacing: 8 * s
+                        Text {
+                            text: String(root.displayHour).padStart(2, '0')
+                            font.family: root.boldFont
+                            font.pixelSize: 144 * s
+                            font.weight: Font.Black
+                            color: root.mainTextColor
+                            renderType: Text.NativeRendering
+                        }
+
+                        Text {
+                            text: ":"
+                            font.family: root.boldFont
+                            font.pixelSize: 132 * s
+                            font.weight: Font.Black
+                            color: root.accentColor
+                            opacity: (root.curMS < 500) ? 1.0 : 0.20
+                            renderType: Text.NativeRendering
+                            Behavior on opacity { NumberAnimation { duration: 150 } }
+                        }
+
+                        Text {
+                            text: String(root.curM).padStart(2, '0')
+                            font.family: root.boldFont
+                            font.pixelSize: 144 * s
+                            font.weight: Font.Black
+                            color: root.mainTextColor
+                            renderType: Text.NativeRendering
+                        }
+                    }
+
+                    // Kinetic Seconds Progress Rail with Sticky Tens and Moving Units + "s"
+                    Item {
+                        id: secTrackItem
+                        width: 540 * s
+                        height: 38 * s
+
+                        readonly property real secFrac: (root.curS * 1000 + root.curMS) / 60000.0
+                        readonly property real railLen: 430 * s
+
+                        // Sticky First Number (Seconds Tens Digit: 0, 1, 2, 3, 4, 5)
+                        Rectangle {
+                            id: stickyTensBadge
+                            anchors.left: parent.left
+                            anchors.verticalCenter: parent.verticalCenter
+                            width: 32 * s
+                            height: 28 * s
+                            radius: 7 * s
+                            color: Qt.rgba(root.accentColor.r, root.accentColor.g, root.accentColor.b, 0.14)
+                            border.color: Qt.rgba(root.accentColor.r, root.accentColor.g, root.accentColor.b, 0.45)
+                            border.width: 1.5 * s
+
+                            Text {
+                                anchors.centerIn: parent
+                                text: String(Math.floor(root.curS / 10))
+                                font.family: root.boldFont
+                                font.pixelSize: 16 * s
+                                font.weight: Font.Black
+                                color: root.accentColor
+                                renderType: Text.NativeRendering
+                            }
+                        }
+
+                        // Progress Rail
+                        Rectangle {
+                            id: secRail
+                            anchors.left: stickyTensBadge.right
+                            anchors.leftMargin: 14 * s
+                            anchors.verticalCenter: parent.verticalCenter
+                            width: secTrackItem.railLen
+                            height: 4 * s
+                            radius: 2 * s
+                            color: Qt.rgba(1, 1, 1, 0.08)
+
+                            // Active progress fill
+                            Rectangle {
+                                anchors.left: parent.left
+                                anchors.top: parent.top
+                                anchors.bottom: parent.bottom
+                                width: Math.max(4 * s, Math.min(parent.width, parent.width * secTrackItem.secFrac))
+                                radius: 2 * s
+                                color: root.accentColor
+                            }
+
+                            // Moving Second Number + letter "s" (Attached to timer head)
+                            Item {
+                                id: movingSecHead
+                                x: Math.max(0, Math.min(secRail.width - width, (secRail.width * secTrackItem.secFrac) - (width * 0.5)))
+                                anchors.verticalCenter: parent.verticalCenter
+                                width: movingPill.width
+                                height: 32 * s
+
+                                // Floating Pill with 2nd number and letter 's' (e.g. "4s", "9s")
+                                Rectangle {
+                                    id: movingPill
+                                    anchors.horizontalCenter: parent.horizontalCenter
+                                    anchors.bottom: dotAnchor.top
+                                    anchors.bottomMargin: 4 * s
+                                    width: movingSecTxt.width + 12 * s
+                                    height: 20 * s
+                                    radius: 5 * s
+                                    color: Qt.rgba(12/255, 17/255, 26/255, 0.90)
+                                    border.color: root.accentColor
+                                    border.width: 1 * s
+
+                                    Text {
+                                        id: movingSecTxt
+                                        anchors.centerIn: parent
+                                        text: (root.curS % 10) + "s"
+                                        font.family: root.boldFont
+                                        font.pixelSize: 11 * s
+                                        font.weight: Font.Black
+                                        font.letterSpacing: 1 * s
+                                        color: root.accentColor
+                                        renderType: Text.NativeRendering
+                                    }
+                                }
+
+                                // Glowing Indicator Dot directly on the rail
+                                Rectangle {
+                                    id: dotAnchor
+                                    anchors.horizontalCenter: parent.horizontalCenter
+                                    anchors.verticalCenter: parent.verticalCenter
+                                    width: 10 * s
+                                    height: 10 * s
+                                    radius: 5 * s
+                                    color: root.mainTextColor
+                                    border.color: root.accentColor
+                                    border.width: 2 * s
+                                }
+                            }
+                        }
+
+                        // Static 60s End Marker
+                        Text {
+                            anchors.left: secRail.right
+                            anchors.leftMargin: 10 * s
+                            anchors.verticalCenter: parent.verticalCenter
+                            text: "60s"
+                            font.family: root.boldFont
+                            font.pixelSize: 11 * s
+                            font.letterSpacing: 1.5 * s
+                            font.weight: Font.Bold
+                            color: Qt.rgba(1, 1, 1, 0.25)
+                            renderType: Text.NativeRendering
+                        }
+                    }
+
+                    // Day of Week
+                    Text {
+                        text: Qt.formatDate(new Date(), "dddd").toUpperCase()
+                        font.family: root.boldFont
+                        font.pixelSize: 30 * s
+                        font.letterSpacing: 8 * s
+                        font.weight: Font.Black
+                        color: root.mainTextColor
+                        renderType: Text.NativeRendering
+                    }
+
+                    // Full Date
+                    Text {
+                        text: Qt.formatDate(new Date(), "dd MMMM yyyy").toUpperCase()
+                        font.family: root.semiBoldFont
+                        font.pixelSize: 15 * s
+                        font.letterSpacing: 4 * s
+                        font.weight: Font.DemiBold
+                        color: root.subTextColor
+                        renderType: Text.NativeRendering
+                    }
+                }
+            }
+
+            // 3. Center-Right Floating Authentication Monolith Dock
+            Rectangle {
+                id: minAuthCard
+                anchors.right: parent.right
+                anchors.rightMargin: 130 * s
+                anchors.verticalCenter: parent.verticalCenter
+                width: 430 * s
+                height: 290 * s
+                radius: 20 * s
+                color: root.isErrorState ? Qt.rgba(36/255, 8/255, 14/255, 0.85) : Qt.rgba(12/255, 17/255, 26/255, 0.72)
+                border.color: root.isErrorState ? root.errorColor : (root.isLoggingIn ? root.accentColor : Qt.rgba(255, 255, 255, 0.08))
+                border.width: (root.isErrorState || root.isLoggingIn) ? 2 * s : 1.5 * s
+
+                Behavior on color { ColorAnimation { duration: 250 } }
+                Behavior on border.color { ColorAnimation { duration: 250 } }
+
+                Column {
+                    anchors.fill: parent
+                    anchors.margins: 28 * s
+                    spacing: 18 * s
+
+                    // User Identity Row
+                    Item {
+                        width: parent.width
+                        height: 52 * s
+
+                        Row {
+                            anchors.fill: parent
+                            spacing: 14 * s
+
+                            // User Initial Avatar Circle
+                            Rectangle {
+                                width: 50 * s
+                                height: 50 * s
+                                radius: 25 * s
+                                color: Qt.rgba(root.accentColor.r, root.accentColor.g, root.accentColor.b, 0.12)
+                                border.color: root.accentColor
+                                border.width: 1.5 * s
+
+                                Text {
+                                    anchors.centerIn: parent
+                                    text: root.currentUserDisplayName.length > 0 ? root.currentUserDisplayName.charAt(0) : "S"
+                                    font.family: root.boldFont
+                                    font.pixelSize: 22 * s
+                                    font.weight: Font.Black
+                                    color: root.accentColor
+                                    renderType: Text.NativeRendering
+                                }
+                            }
+
+                            // User Details
+                            Column {
+                                anchors.verticalCenter: parent.verticalCenter
+                                spacing: 3 * s
+
+                                Row {
+                                    spacing: 8 * s
+                                    Text {
+                                        text: root.currentUserDisplayName
+                                        font.family: root.boldFont
+                                        font.pixelSize: 18 * s
+                                        font.letterSpacing: 3 * s
+                                        font.weight: Font.Black
+                                        color: root.mainTextColor
+                                        renderType: Text.NativeRendering
+                                    }
+
+                                    Text {
+                                        visible: typeof userModel !== "undefined" && userModel && userModel.rowCount() > 1
+                                        text: root.userMenuOpen ? "▲" : "▼"
+                                        font.pixelSize: 10 * s
+                                        color: minUserMa.containsMouse ? root.accentColor : root.dimTextColor
+                                        anchors.verticalCenter: parent.verticalCenter
+                                    }
+                                }
+
+                                Text {
+                                    text: "ACTIVE OPERATOR // STANDBY"
+                                    font.family: root.semiBoldFont
+                                    font.pixelSize: 10 * s
+                                    font.letterSpacing: 2 * s
+                                    font.weight: Font.DemiBold
+                                    color: root.dimTextColor
+                                    renderType: Text.NativeRendering
+                                }
+                            }
+                        }
+
+                        MouseArea {
+                            id: minUserMa
+                            anchors.fill: parent
+                            hoverEnabled: true
+                            cursorShape: (typeof userModel !== "undefined" && userModel && userModel.rowCount() > 1) ? Qt.PointingHandCursor : Qt.ArrowCursor
+                            onClicked: {
+                                if (typeof userModel !== "undefined" && userModel.rowCount() > 1) {
+                                    root.userMenuOpen = !root.userMenuOpen
+                                    root.sessionMenuOpen = false
+                                }
+                            }
+                        }
+                    }
+
+                    // Divider
+                    Rectangle {
+                        width: parent.width
+                        height: 1 * s
+                        color: Qt.rgba(255, 255, 255, 0.06)
+                    }
+
+                    // Password Input Capsule Box
+                    Rectangle {
+                        id: minInputBox
+                        width: parent.width
+                        height: 52 * s
+                        radius: 12 * s
+                        clip: true
+                        color: Qt.rgba(5/255, 8/255, 14/255, 0.65)
+                        border.color: root.isErrorState ? root.errorColor : (root.isLoggingIn || minPassInput.activeFocus ? root.accentColor : Qt.rgba(255, 255, 255, 0.12))
+                        border.width: (root.isErrorState || root.isLoggingIn) ? 2 * s : 1.5 * s
+
+                        Behavior on border.color { ColorAnimation { duration: 150 } }
+
+                        // Scanning Laser Beam during authentication
+                        Rectangle {
+                            id: scanBar
+                            anchors.bottom: parent.bottom
+                            anchors.bottomMargin: 1 * s
+                            height: 2.5 * s
+                            width: parent.width * 0.38
+                            radius: 1 * s
+                            visible: root.isLoggingIn
+                            gradient: Gradient {
+                                orientation: Gradient.Horizontal
+                                GradientStop { position: 0.0; color: "transparent" }
+                                GradientStop { position: 0.5; color: root.accentColor }
+                                GradientStop { position: 1.0; color: "transparent" }
+                            }
+                            SequentialAnimation on x {
+                                running: root.isLoggingIn
+                                loops: Animation.Infinite
+                                NumberAnimation { from: 0; to: minInputBox.width - scanBar.width; duration: 420; easing.type: Easing.InOutQuad }
+                                NumberAnimation { from: minInputBox.width - scanBar.width; to: 0; duration: 420; easing.type: Easing.InOutQuad }
+                            }
+                        }
+
+                        // Key Icon
+                        Text {
+                            id: minKeyIcon
+                            anchors.left: parent.left
+                            anchors.leftMargin: 18 * s
+                            anchors.verticalCenter: parent.verticalCenter
+                            text: root.isErrorState ? "✕" : "⚿"
+                            font.pixelSize: 18 * s
+                            color: root.isErrorState ? root.errorColor : (root.isLoggingIn || minPassInput.activeFocus ? root.accentColor : root.dimTextColor)
+                        }
+
+                        // Password TextInput
+                        TextInput {
+                            id: minPassInput
+                            anchors.left: minKeyIcon.right
+                            anchors.leftMargin: 12 * s
+                            anchors.right: minSubmitBtn.left
+                            anchors.rightMargin: 10 * s
+                            anchors.verticalCenter: parent.verticalCenter
+                            echoMode: TextInput.Password
+                            passwordCharacter: "•"
+                            color: root.mainTextColor
+                            font.family: root.boldFont
+                            font.pixelSize: 18 * s
+                            font.letterSpacing: 5 * s
+                            focus: root.isMinimalLayout
+                            activeFocusOnPress: false
+                            cursorVisible: true
+                            enabled: !root.isLoggingIn
+                            renderType: Text.NativeRendering
+                            inputMethodHints: root.enableVirtualKeyboard ? Qt.ImhNone : (Qt.ImhHiddenText | Qt.ImhSensitiveData | Qt.ImhNoPredictiveText)
+                            onActiveFocusChanged: {
+                                if (activeFocus && !root.enableVirtualKeyboard) {
+                                    Qt.inputMethod.hide()
+                                }
+                            }
+                            Keys.onReturnPressed: root.startLoginSequence()
+                        }
+
+                        // Placeholder Text
+                        Text {
+                            anchors.left: minKeyIcon.right
+                            anchors.leftMargin: 12 * s
+                            anchors.verticalCenter: parent.verticalCenter
+                            text: root.authSubtitle
+                            font.family: root.semiBoldFont
+                            font.pixelSize: 11 * s
+                            font.letterSpacing: 2 * s
+                            color: root.dimTextColor
+                            visible: minPassInput.text.length === 0 && !minPassInput.activeFocus && !root.isLoggingIn
+                        }
+
+                        // Submit / Scanner Action Button
+                        Rectangle {
+                            id: minSubmitBtn
+                            anchors.right: parent.right
+                            anchors.rightMargin: 8 * s
+                            anchors.verticalCenter: parent.verticalCenter
+                            width: 38 * s
+                            height: 38 * s
+                            radius: 8 * s
+                            color: root.isErrorState
+                                   ? root.errorColor
+                                   : ((minPassInput.text.length > 0 || minSubMa.containsMouse || root.isLoggingIn) ? root.accentColor : Qt.rgba(255, 255, 255, 0.06))
+
+                            Behavior on color { ColorAnimation { duration: 150 } }
+
+                            Text {
+                                id: minSubmitIcon
+                                anchors.centerIn: parent
+                                text: root.isLoggingIn ? "◌" : (root.isErrorState ? "✕" : "→")
+                                font.family: root.boldFont
+                                font.pixelSize: root.isLoggingIn ? 20 * s : 18 * s
+                                font.weight: Font.Black
+                                color: (minPassInput.text.length > 0 || minSubMa.containsMouse || root.isLoggingIn || root.isErrorState) ? "#080c12" : root.dimTextColor
+
+                                RotationAnimation on rotation {
+                                    running: root.isLoggingIn
+                                    loops: Animation.Infinite
+                                    from: 0
+                                    to: 360
+                                    duration: 800
+                                }
+                            }
+
+                            MouseArea {
+                                id: minSubMa
+                                anchors.fill: parent
+                                enabled: !root.isLoggingIn
+                                hoverEnabled: true
+                                cursorShape: Qt.PointingHandCursor
+                                onClicked: root.startLoginSequence()
+                            }
+                        }
+
+                        MouseArea {
+                            anchors.fill: parent
+                            z: -1
+                            cursorShape: Qt.IBeamCursor
+                            onClicked: {
+                                minPassInput.forceActiveFocus()
+                                if (!root.enableVirtualKeyboard) Qt.inputMethod.hide()
+                            }
+                        }
+                    }
+
+                    // Prompt / Error / Status Label
+                    Text {
+                        id: minErrText
+                        width: parent.width
+                        text: root.isErrorState
+                              ? "ACCESS DENIED // INVALID CREDENTIALS"
+                              : (root.isLoggingIn
+                                 ? "AUTHENTICATING CREDENTIALS..."
+                                 : (minPassInput.text.length > 0 ? "PRESS ENTER TO UNLOCK" : root.authPrompt))
+                        font.family: root.boldFont
+                        font.pixelSize: 11 * s
+                        font.letterSpacing: 2.5 * s
+                        font.weight: Font.Bold
+                        color: root.isErrorState
+                               ? root.errorColor
+                               : (root.isLoggingIn || minPassInput.text.length > 0 ? root.accentColor : root.subTextColor)
+                        horizontalAlignment: Text.AlignRight
+                        renderType: Text.NativeRendering
+
+                        SequentialAnimation on opacity {
+                            running: root.isLoggingIn
+                            loops: Animation.Infinite
+                            NumberAnimation { to: 0.35; duration: 320; easing.type: Easing.InOutSine }
+                            NumberAnimation { to: 1.0; duration: 320; easing.type: Easing.InOutSine }
+                        }
+                    }
+                }
+            }
+        }
+
         // Bottom Right Terminal Action Button (`>_`)
         Rectangle {
             id: termBtn
@@ -892,7 +1778,7 @@ Rectangle {
             anchors.bottom: termBtn.top
             anchors.bottomMargin: 14 * s
             width: 370 * s
-            height: root.infoDrawerOpen ? 210 * s : 0
+            height: root.infoDrawerOpen ? 255 * s : 0
             clip: true
             radius: 14 * s
             color: root.isLight ? "#f8fafc" : "#0e1622"
@@ -915,6 +1801,28 @@ Rectangle {
                     font.weight: Font.Bold
                     color: root.accentColor
                     renderType: Text.NativeRendering
+                }
+
+                Row {
+                    spacing: 10 * s
+                    Text {
+                        text: "THEME:"
+                        font.family: root.semiBoldFont
+                        font.pixelSize: 13 * s
+                        font.letterSpacing: 1.5 * s
+                        font.weight: Font.DemiBold
+                        color: root.isLight ? "#64748b" : "#94a3b8"
+                        renderType: Text.NativeRendering
+                    }
+                    Text {
+                        text: root.themeName.toUpperCase()
+                        font.family: root.boldFont
+                        font.pixelSize: 13 * s
+                        font.letterSpacing: 1.5 * s
+                        font.weight: Font.Bold
+                        color: root.accentColor
+                        renderType: Text.NativeRendering
+                    }
                 }
 
                 Row {
@@ -1012,23 +1920,61 @@ Rectangle {
 
     // Login Action Logic
     function startLoginSequence() {
-        if (passInput.text.length === 0 || root.isLoggingIn) {
-            passInput.forceActiveFocus()
+        var pw = root.isMinimalLayout ? minPassInput.text : passInput.text
+        if (pw.length === 0 || root.isLoggingIn) {
+            root.focusActiveInput()
             return
         }
 
         root.isLoggingIn = true
-        if (root.enableWindup) {
+        root.isErrorState = false
+        errorResetTimer.stop()
+
+        if (root.isMinimalLayout) {
+            minLoginAnim.start()
+        } else if (root.enableWindup) {
             windupAnim.start()
         } else {
             doLogin()
         }
     }
 
+    // High-tech authentication animation sequence timer for minimal layout
+    PauseAnimation {
+        id: minLoginAnim
+        duration: 750
+        onFinished: root.doLogin()
+    }
+
+    // Smooth unlock dissolve transition when session opens
+    ParallelAnimation {
+        id: minUnlockAnim
+        NumberAnimation { target: mainContainer; property: "opacity"; to: 0; duration: 450; easing.type: Easing.OutCubic }
+        NumberAnimation { target: mainContainer; property: "scale"; to: 1.04; duration: 450; easing.type: Easing.OutCubic }
+    }
+
+    // 3-Second Error State Reset Timer
+    Timer {
+        id: errorResetTimer
+        interval: 3000
+        repeat: false
+        onTriggered: {
+            root.isErrorState = false
+            if (typeof minErrText !== "undefined" && minErrText) {
+                minErrText.text = (minPassInput.text.length > 0 ? "PRESS ENTER TO UNLOCK" : root.authPrompt)
+            }
+            if (typeof errText !== "undefined" && errText) {
+                errText.text = ""
+            }
+            root.focusActiveInput()
+        }
+    }
+
     function doLogin() {
         var uname = root.currentUserLoginName
+        var pw = root.isMinimalLayout ? minPassInput.text : passInput.text
         if (typeof sddm !== "undefined") {
-            sddm.login(uname, passInput.text, root.sessionIndex)
+            sddm.login(uname, pw, root.sessionIndex)
         }
     }
 
@@ -1041,49 +1987,85 @@ Rectangle {
     Connections {
         target: typeof sddm !== "undefined" ? sddm : null
         function onLoginSucceeded() {
+            root.isLoggingIn = false
+            root.isErrorState = false
             errText.text = ""
+            if (typeof minErrText !== "undefined" && minErrText) minErrText.text = "ACCESS GRANTED // INITIALIZING SYSTEM"
+            if (root.isMinimalLayout) {
+                minUnlockAnim.start()
+            }
         }
         function onLoginFailed() {
             root.isLoggingIn = false
+            minLoginAnim.stop()
             windupAnim.stop()
             root.windupOffset = 0
+            root.isErrorState = true
             errText.text = "ACCESS DENIED"
+            if (typeof minErrText !== "undefined" && minErrText) minErrText.text = "ACCESS DENIED // INVALID CREDENTIALS"
             passInput.text = ""
-            passInput.forceActiveFocus()
-            if (!root.enableVirtualKeyboard) Qt.inputMethod.hide()
-            shakeAnim.start()
+            if (typeof minPassInput !== "undefined" && minPassInput) minPassInput.text = ""
+            root.focusActiveInput()
+            shakeAnim.restart()
+            errorResetTimer.restart()
         }
     }
 
+    // High-impact decaying harmonic shake animation across all elements
     SequentialAnimation {
         id: shakeAnim
-        NumberAnimation { target: loginPanel; property: "anchors.rightMargin"; from: root.marginR; to: root.marginR + 10 * s; duration: 40; easing.type: Easing.InOutSine }
-        NumberAnimation { target: loginPanel; property: "anchors.rightMargin"; to: root.marginR - 10 * s; duration: 40; easing.type: Easing.InOutSine }
-        NumberAnimation { target: loginPanel; property: "anchors.rightMargin"; to: root.marginR + 6 * s; duration: 40; easing.type: Easing.InOutSine }
-        NumberAnimation { target: loginPanel; property: "anchors.rightMargin"; to: root.marginR; duration: 40; easing.type: Easing.InOutSine }
+        alwaysRunToEnd: true
+        NumberAnimation { target: root; property: "shakeOffset"; from: 0; to: -18 * s; duration: 40; easing.type: Easing.OutQuad }
+        NumberAnimation { target: root; property: "shakeOffset"; to: 18 * s; duration: 50; easing.type: Easing.InOutQuad }
+        NumberAnimation { target: root; property: "shakeOffset"; to: -14 * s; duration: 50; easing.type: Easing.InOutQuad }
+        NumberAnimation { target: root; property: "shakeOffset"; to: 14 * s; duration: 50; easing.type: Easing.InOutQuad }
+        NumberAnimation { target: root; property: "shakeOffset"; to: -9 * s; duration: 45; easing.type: Easing.InOutQuad }
+        NumberAnimation { target: root; property: "shakeOffset"; to: 9 * s; duration: 45; easing.type: Easing.InOutQuad }
+        NumberAnimation { target: root; property: "shakeOffset"; to: -4 * s; duration: 40; easing.type: Easing.InOutQuad }
+        NumberAnimation { target: root; property: "shakeOffset"; to: 0; duration: 40; easing.type: Easing.OutQuad }
     }
 
-    // Minimal Top Action Button Component (Clean typography, no artificial icons)
+    // Minimal Top Action Button Component (Themed glass capsule pill)
     component CwAction: Item {
         id: actItem
-        width: actTxt.width + 10 * s
-        height: 22 * s
+        width: actBg.width
+        height: 32 * s
         property string label: ""
+        property bool isActive: false
         signal clicked()
 
-        Text {
-            id: actTxt
-            anchors.centerIn: parent
-            text: label.toUpperCase()
-            color: actM.containsMouse ? root.mainTextColor : root.subTextColor
-            font.family: root.boldFont
-            font.pixelSize: 12 * s
-            font.letterSpacing: 4 * s
-            font.weight: Font.Bold
-            antialiasing: true
-            renderType: Text.NativeRendering
+        Rectangle {
+            id: actBg
+            width: actTxt.width + 24 * s
+            height: parent.height
+            radius: 8 * s
+            color: actM.containsMouse
+                   ? Qt.rgba(root.accentColor.r, root.accentColor.g, root.accentColor.b, 0.15)
+                   : (actItem.isActive
+                      ? Qt.rgba(root.accentColor.r, root.accentColor.g, root.accentColor.b, 0.10)
+                      : (root.isLight ? Qt.rgba(0, 0, 0, 0.05) : Qt.rgba(12/255, 17/255, 26/255, 0.65)))
+            border.color: (actM.containsMouse || actItem.isActive)
+                          ? root.accentColor
+                          : (root.isLight ? Qt.rgba(0, 0, 0, 0.10) : Qt.rgba(255, 255, 255, 0.08))
+            border.width: 1 * s
 
             Behavior on color { ColorAnimation { duration: 150 } }
+            Behavior on border.color { ColorAnimation { duration: 150 } }
+
+            Text {
+                id: actTxt
+                anchors.centerIn: parent
+                text: label.toUpperCase()
+                color: (actM.containsMouse || actItem.isActive) ? root.accentColor : root.subTextColor
+                font.family: root.boldFont
+                font.pixelSize: 11 * s
+                font.letterSpacing: 2.5 * s
+                font.weight: Font.Bold
+                antialiasing: true
+                renderType: Text.NativeRendering
+
+                Behavior on color { ColorAnimation { duration: 150 } }
+            }
         }
 
         MouseArea {

@@ -220,6 +220,13 @@ if [ -f /etc/sddm.conf ]; then
     fi
 fi
 
+# Install prohori-theme command to /usr/local/bin for convenient CLI access
+if [ -f "${INSTALL_DEST}/switch-theme.sh" ]; then
+    echo -e "${BLUE}==>${RESET} Installing theme switcher CLI tool to ${BOLD}/usr/local/bin/prohori-theme${RESET}..."
+    elevate ln -sf "${INSTALL_DEST}/switch-theme.sh" /usr/local/bin/prohori-theme 2>/dev/null || true
+fi
+
 echo -e "\n${GREEN}${BOLD}✓ [SUCCESS] Prohori SDDM theme installed and activated!${RESET}"
 echo -e "Theme Location: ${CYAN}${INSTALL_DEST}${RESET}"
+echo -e "To switch themes anytime: ${CYAN}prohori-theme${RESET} (or ${CYAN}${SCRIPT_DIR}/switch-theme.sh${RESET})"
 echo -e "To test anytime: ${CYAN}${SCRIPT_DIR}/test.sh${RESET}\n"
