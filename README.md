@@ -6,10 +6,24 @@ A minimalist, high-performance, and futuristic SDDM Qt6 theme designed with rota
 
 ## Previews
 
-### Main Lockscreen View
-![Prohori Main View](screenshots/main.png)
+### 1. Prohori Classic (Orbital Dialer & Liquid Glass Capsule)
+> Concentric orbital chronometer dials with windup rotation, authentic optical liquid glass watery capsule, seamless specular reflections, and dial numbers sweeping under the glass.
+
+![Prohori Classic](screenshots/classic.png)
+
+### 2. Prohori Minimal (Monolithic Digital Clock & Micro-Dust Motes)
+> Architectural monolithic clock, kinetic seconds rail with floating units badge, floating center-right authentication card, unified top status deck, and ambient falling green dust motes.
+
+![Prohori Minimal](screenshots/minimal.png)
+
+### 3. Prohori Astral (Monumental Chronometer & Rising Violet Mist)
+> Monumental centered architectural chronometer, cyber plasma seconds rail, horizontal cyber-deck command console, cyber telemetry cluster, and ethereal rising violet smoke plumes.
+
+![Prohori Astral](screenshots/astral.png)
 
 ### System Dashboard Flyout
+> Corner badge (`>_`) toggling quick system telemetry, hostname, session type, active theme, and live 12h/24h toggle.
+
 ![Prohori Dashboard View](screenshots/dashboard.png)
 
 ---
@@ -43,7 +57,7 @@ This theme was inspired by the **Ryoku** lockscreen and login environment design
   - Ambient radial backlight behind the clock dynamically tinted to match each theme's accent color.
   - Contrast dimmer layer ensuring maximum legibility across custom wallpapers.
 - **Preset System & Theme Switcher**:
-  - 9 handcrafted presets for popular desktop rice aesthetics (Cyberpunk, Nord, Catppuccin, Tokyo Night, Matrix Emerald, Blood Moon, OLED Stealth, Amber Horizon, Prohori Classic).
+  - 3 handcrafted presets for distinct desktop aesthetics: **Prohori Classic** (orbital liquid dials), **Prohori Minimal** (monolithic architectural clock), and **Prohori Astral** (centered chronometer with rising violet smoke).
   - CLI and interactive switcher script (`./switch-theme.sh` / `prohori-theme`).
 - **Display & Hardware Optimization**:
   - **All Resolutions**: Proportional dynamic scaling that fits cleanly across 720p, 1080p, 2K (1440p), 4K (2160p), 16:10 laptop screens, and 21:9 ultrawide monitors without clipping.
@@ -159,11 +173,14 @@ Shows all themes with active indicators, lets you pick by number or name, and of
 # Switch to Prohori Minimal (Modern architectural layout)
 ./switch-theme.sh minimal
 
-# Switch to Prohori Minimal and immediately preview live
-./switch-theme.sh minimal --test
+# Switch to Prohori Astral (Monumental centered layout with rising smoke)
+./switch-theme.sh astral
 
-# Switch to Prohori Classic (Orbital dialer layout)
+# Switch to Prohori Classic (Orbital dialer layout with liquid glass)
 ./switch-theme.sh default
+
+# Switch to a preset and immediately preview live
+./switch-theme.sh astral --test
 
 # List all available presets
 ./switch-theme.sh --list
@@ -188,7 +205,7 @@ Before running the installation script, you can preview and test the theme prese
 ```bash
 ./test-theme.sh
 ```
-Launches an interactive loop. Choose any theme number (1–2) or key to immediately open its live SDDM preview window. Closing the preview window automatically returns you to the menu to test another theme.
+Launches an interactive loop. Choose any theme number (1–3) or key to immediately open its live SDDM preview window. Closing the preview window automatically returns you to the menu to test another theme.
 
 ### 2. Tour All Themes in Sequence
 ```bash
@@ -200,10 +217,12 @@ Cycles through the theme presets one after another. Close each window to automat
 ```bash
 # Test a theme directly using test.sh:
 ./test.sh minimal
+./test.sh astral
 ./test.sh default
 
 # Or with test-theme.sh:
 ./test-theme.sh minimal
+./test-theme.sh astral
 ./test-theme.sh default
 ```
 
@@ -287,8 +306,11 @@ prohori/
 │   ├── minimal.jpg      # Minimal clean obsidian slate background
 │   └── default.jpg      # Classic obsidian navy background
 ├── screenshots/         # Documentation screenshots
-│   ├── main.png
-│   └── dashboard.png
+│   ├── classic.png      # Prohori Classic preview
+│   ├── minimal.png      # Prohori Minimal preview
+│   ├── astral.png       # Prohori Astral preview
+│   ├── main.png         # Default greeter preview
+│   └── dashboard.png    # System dashboard flyout preview
 └── fonts/               # Bundled Outfit font files
     ├── Outfit-Black.ttf
     ├── Outfit-Bold.ttf
