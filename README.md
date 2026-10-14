@@ -21,11 +21,6 @@ A minimalist, high-performance, and futuristic SDDM Qt6 theme designed with rota
 
 ![Prohori Astral](screenshots/astral.png)
 
-### System Dashboard Flyout
-> Corner badge (`>_`) toggling quick system telemetry, hostname, session type, active theme, and live 12h/24h toggle.
-
-![Prohori Dashboard View](screenshots/dashboard.png)
-
 ---
 
 ## About the Name
