@@ -817,10 +817,485 @@ Rectangle {
         z: 20
         opacity: root.uiOpacity
 
-        Row {
-            id: hudRow
+        // 1. Prohori Minimal: Monolithic Unified Obsidian Status & Control Capsule
+        Rectangle {
+            id: minTopDeck
+            visible: root.isMinimalLayout
             anchors.right: parent.right
-            anchors.rightMargin: root.isAstralLayout ? 70 * s : (root.isMinimalLayout ? 130 * s : root.marginR)
+            anchors.rightMargin: 130 * s
+            anchors.top: parent.top
+            anchors.topMargin: 46 * s
+            height: 38 * s
+            width: minDeckRow.width + 24 * s
+            radius: 19 * s
+            color: Qt.rgba(12/255, 17/255, 26/255, 0.75)
+            border.color: Qt.rgba(255, 255, 255, 0.09)
+            border.width: 1 * s
+
+            Row {
+                id: minDeckRow
+                anchors.centerIn: parent
+                spacing: 12 * s
+
+                // Minimal Session Selector
+                Item {
+                    id: minSessionBtn
+                    width: minSessContent.width + 16 * s
+                    height: 28 * s
+                    anchors.verticalCenter: parent.verticalCenter
+
+                    Rectangle {
+                        anchors.fill: parent
+                        radius: 14 * s
+                        color: minSessMa.containsMouse || root.sessionMenuOpen
+                               ? Qt.rgba(root.accentColor.r, root.accentColor.g, root.accentColor.b, 0.14)
+                               : "transparent"
+                        border.color: minSessMa.containsMouse || root.sessionMenuOpen
+                                      ? Qt.rgba(root.accentColor.r, root.accentColor.g, root.accentColor.b, 0.40)
+                                      : "transparent"
+                        border.width: 1 * s
+
+                        Behavior on color { ColorAnimation { duration: 150 } }
+                        Behavior on border.color { ColorAnimation { duration: 150 } }
+
+                        Row {
+                            id: minSessContent
+                            anchors.centerIn: parent
+                            spacing: 8 * s
+
+                            // Live Session Indicator Dot
+                            Rectangle {
+                                width: 6 * s
+                                height: 6 * s
+                                radius: 3 * s
+                                color: root.accentColor
+                                anchors.verticalCenter: parent.verticalCenter
+
+                                Rectangle {
+                                    anchors.centerIn: parent
+                                    width: 12 * s
+                                    height: 12 * s
+                                    radius: 6 * s
+                                    color: Qt.rgba(root.accentColor.r, root.accentColor.g, root.accentColor.b, 0.25)
+                                    z: -1
+                                }
+                            }
+
+                            Text {
+                                text: root.currentSessionDisplayName.toUpperCase()
+                                color: minSessMa.containsMouse || root.sessionMenuOpen ? root.accentColor : root.mainTextColor
+                                font.family: root.boldFont
+                                font.pixelSize: 11 * s
+                                font.letterSpacing: 2 * s
+                                font.weight: Font.Bold
+                                anchors.verticalCenter: parent.verticalCenter
+                                renderType: Text.NativeRendering
+                            }
+
+                            Text {
+                                text: root.sessionMenuOpen ? "▲" : "▼"
+                                color: minSessMa.containsMouse || root.sessionMenuOpen ? root.accentColor : root.dimTextColor
+                                font.pixelSize: 8 * s
+                                anchors.verticalCenter: parent.verticalCenter
+                            }
+                        }
+                    }
+
+                    MouseArea {
+                        id: minSessMa
+                        anchors.fill: parent
+                        hoverEnabled: true
+                        cursorShape: Qt.PointingHandCursor
+                        onClicked: {
+                            if (typeof sessionModel !== "undefined" && sessionModel.rowCount() > 1) {
+                                root.sessionMenuOpen = !root.sessionMenuOpen
+                                root.userMenuOpen = false
+                            } else if (typeof sessionModel !== "undefined" && sessionModel.rowCount() > 0) {
+                                root.sessionIndex = (root.sessionIndex + 1) % sessionModel.rowCount()
+                            }
+                        }
+                    }
+                }
+
+                // Vertical Divider 1
+                Rectangle {
+                    width: 1 * s
+                    height: 16 * s
+                    color: Qt.rgba(255, 255, 255, 0.12)
+                    anchors.verticalCenter: parent.verticalCenter
+                }
+
+                // Minimal Reboot Button
+                Item {
+                    id: minRebootBtn
+                    width: minRebootRow.width + 16 * s
+                    height: 28 * s
+                    anchors.verticalCenter: parent.verticalCenter
+
+                    Rectangle {
+                        anchors.fill: parent
+                        radius: 14 * s
+                        color: minRebootMa.containsMouse
+                               ? Qt.rgba(root.accentColor.r, root.accentColor.g, root.accentColor.b, 0.14)
+                               : "transparent"
+                        border.color: minRebootMa.containsMouse
+                                      ? Qt.rgba(root.accentColor.r, root.accentColor.g, root.accentColor.b, 0.35)
+                                      : "transparent"
+                        border.width: 1 * s
+
+                        Behavior on color { ColorAnimation { duration: 150 } }
+                        Behavior on border.color { ColorAnimation { duration: 150 } }
+
+                        Row {
+                            id: minRebootRow
+                            anchors.centerIn: parent
+                            spacing: 6 * s
+
+                            Text {
+                                text: "⟳"
+                                font.pixelSize: 13 * s
+                                color: minRebootMa.containsMouse ? root.accentColor : root.subTextColor
+                                anchors.verticalCenter: parent.verticalCenter
+                                renderType: Text.NativeRendering
+                            }
+
+                            Text {
+                                text: "REBOOT"
+                                font.family: root.boldFont
+                                font.pixelSize: 10 * s
+                                font.letterSpacing: 1.8 * s
+                                font.weight: Font.Bold
+                                color: minRebootMa.containsMouse ? root.accentColor : root.subTextColor
+                                anchors.verticalCenter: parent.verticalCenter
+                                renderType: Text.NativeRendering
+                            }
+                        }
+                    }
+
+                    MouseArea {
+                        id: minRebootMa
+                        anchors.fill: parent
+                        hoverEnabled: true
+                        cursorShape: Qt.PointingHandCursor
+                        onClicked: {
+                            if (typeof sddm !== "undefined") sddm.reboot()
+                        }
+                    }
+                }
+
+                // Vertical Divider 2
+                Rectangle {
+                    width: 1 * s
+                    height: 16 * s
+                    color: Qt.rgba(255, 255, 255, 0.12)
+                    anchors.verticalCenter: parent.verticalCenter
+                }
+
+                // Minimal Shutdown Button
+                Item {
+                    id: minPowerBtn
+                    width: minPowerRow.width + 16 * s
+                    height: 28 * s
+                    anchors.verticalCenter: parent.verticalCenter
+
+                    Rectangle {
+                        anchors.fill: parent
+                        radius: 14 * s
+                        color: minPowerMa.containsMouse
+                               ? Qt.rgba(255/255, 51/255, 102/255, 0.18)
+                               : "transparent"
+                        border.color: minPowerMa.containsMouse
+                                      ? Qt.rgba(255/255, 51/255, 102/255, 0.50)
+                                      : "transparent"
+                        border.width: 1 * s
+
+                        Behavior on color { ColorAnimation { duration: 150 } }
+                        Behavior on border.color { ColorAnimation { duration: 150 } }
+
+                        Row {
+                            id: minPowerRow
+                            anchors.centerIn: parent
+                            spacing: 6 * s
+
+                            Text {
+                                text: "⏻"
+                                font.pixelSize: 12 * s
+                                color: minPowerMa.containsMouse ? "#ff3366" : root.subTextColor
+                                anchors.verticalCenter: parent.verticalCenter
+                                renderType: Text.NativeRendering
+                            }
+
+                            Text {
+                                text: "SHUTDOWN"
+                                font.family: root.boldFont
+                                font.pixelSize: 10 * s
+                                font.letterSpacing: 1.8 * s
+                                font.weight: Font.Bold
+                                color: minPowerMa.containsMouse ? "#ff3366" : root.subTextColor
+                                anchors.verticalCenter: parent.verticalCenter
+                                renderType: Text.NativeRendering
+                            }
+                        }
+                    }
+
+                    MouseArea {
+                        id: minPowerMa
+                        anchors.fill: parent
+                        hoverEnabled: true
+                        cursorShape: Qt.PointingHandCursor
+                        onClicked: {
+                            if (typeof sddm !== "undefined") sddm.powerOff()
+                        }
+                    }
+                }
+            }
+        }
+
+        // 2. Prohori Astral: Futuristic Cyber Telemetry Cluster
+        Row {
+            id: astralTopDeck
+            visible: root.isAstralLayout
+            anchors.right: parent.right
+            anchors.rightMargin: 70 * s
+            anchors.top: parent.top
+            anchors.topMargin: 46 * s
+            spacing: 12 * s
+
+            // Cyber Session Selector Pill
+            Rectangle {
+                id: astralSessionBtn
+                width: astralSessContent.width + 26 * s
+                height: 38 * s
+                radius: 12 * s
+                anchors.verticalCenter: parent.verticalCenter
+                color: astralSessMa.containsMouse || root.sessionMenuOpen
+                       ? Qt.rgba(root.accentColor.r, root.accentColor.g, root.accentColor.b, 0.18)
+                       : Qt.rgba(14/255, 10/255, 26/255, 0.82)
+                border.color: astralSessMa.containsMouse || root.sessionMenuOpen
+                              ? root.accentColor
+                              : Qt.rgba(root.accentColor.r, root.accentColor.g, root.accentColor.b, 0.40)
+                border.width: 1.5 * s
+
+                Behavior on color { ColorAnimation { duration: 150 } }
+                Behavior on border.color { ColorAnimation { duration: 150 } }
+
+                Row {
+                    id: astralSessContent
+                    anchors.centerIn: parent
+                    spacing: 8 * s
+
+                    // Glowing Amethyst Diamond
+                    Text {
+                        text: "◈"
+                        font.pixelSize: 13 * s
+                        color: root.accentColor
+                        anchors.verticalCenter: parent.verticalCenter
+                        renderType: Text.NativeRendering
+                    }
+
+                    Text {
+                        text: "SYS // "
+                        font.family: root.boldFont
+                        font.pixelSize: 9 * s
+                        font.letterSpacing: 1.5 * s
+                        font.weight: Font.Bold
+                        color: root.dimTextColor
+                        anchors.verticalCenter: parent.verticalCenter
+                        renderType: Text.NativeRendering
+                    }
+
+                    Text {
+                        text: root.currentSessionDisplayName.toUpperCase()
+                        color: astralSessMa.containsMouse || root.sessionMenuOpen ? root.accentColor : root.mainTextColor
+                        font.family: root.boldFont
+                        font.pixelSize: 11 * s
+                        font.letterSpacing: 2 * s
+                        font.weight: Font.Bold
+                        anchors.verticalCenter: parent.verticalCenter
+                        renderType: Text.NativeRendering
+                    }
+
+                    Text {
+                        text: root.sessionMenuOpen ? "▲" : "▼"
+                        color: astralSessMa.containsMouse || root.sessionMenuOpen ? root.accentColor : root.dimTextColor
+                        font.pixelSize: 8 * s
+                        anchors.verticalCenter: parent.verticalCenter
+                    }
+                }
+
+                MouseArea {
+                    id: astralSessMa
+                    anchors.fill: parent
+                    hoverEnabled: true
+                    cursorShape: Qt.PointingHandCursor
+                    onClicked: {
+                        if (typeof sessionModel !== "undefined" && sessionModel.rowCount() > 1) {
+                            root.sessionMenuOpen = !root.sessionMenuOpen
+                            root.userMenuOpen = false
+                        } else if (typeof sessionModel !== "undefined" && sessionModel.rowCount() > 0) {
+                            root.sessionIndex = (root.sessionIndex + 1) % sessionModel.rowCount()
+                        }
+                    }
+                }
+            }
+
+            // Cyber Reboot Pod
+            Rectangle {
+                id: astralRebootBtn
+                width: 38 * s
+                height: 38 * s
+                radius: 11 * s
+                anchors.verticalCenter: parent.verticalCenter
+                color: astralRebootMa.containsMouse
+                       ? Qt.rgba(root.accentColor.r, root.accentColor.g, root.accentColor.b, 0.22)
+                       : Qt.rgba(14/255, 10/255, 26/255, 0.82)
+                border.color: astralRebootMa.containsMouse
+                              ? root.accentColor
+                              : Qt.rgba(root.accentColor.r, root.accentColor.g, root.accentColor.b, 0.35)
+                border.width: 1.5 * s
+
+                Behavior on color { ColorAnimation { duration: 150 } }
+                Behavior on border.color { ColorAnimation { duration: 150 } }
+
+                Text {
+                    id: astralRebootGlyph
+                    anchors.centerIn: parent
+                    text: "⟳"
+                    font.family: root.boldFont
+                    font.pixelSize: 16 * s
+                    font.weight: Font.Bold
+                    color: astralRebootMa.containsMouse ? root.accentColor : root.subTextColor
+                    rotation: astralRebootMa.containsMouse ? 45 : 0
+                    scale: astralRebootMa.containsMouse ? 1.15 : 1.0
+                    renderType: Text.NativeRendering
+
+                    Behavior on rotation { NumberAnimation { duration: 250; easing.type: Easing.OutBack } }
+                    Behavior on scale { NumberAnimation { duration: 150 } }
+                    Behavior on color { ColorAnimation { duration: 150 } }
+                }
+
+                // Hover Micro Tooltip Badge
+                Rectangle {
+                    anchors.top: parent.bottom
+                    anchors.topMargin: 8 * s
+                    anchors.horizontalCenter: parent.horizontalCenter
+                    width: astralRebootTipTxt.width + 16 * s
+                    height: 22 * s
+                    radius: 6 * s
+                    color: Qt.rgba(14/255, 10/255, 26/255, 0.95)
+                    border.color: Qt.rgba(root.accentColor.r, root.accentColor.g, root.accentColor.b, 0.40)
+                    border.width: 1 * s
+                    opacity: astralRebootMa.containsMouse ? 1.0 : 0.0
+                    visible: opacity > 0
+                    z: 100
+
+                    Behavior on opacity { NumberAnimation { duration: 150 } }
+
+                    Text {
+                        id: astralRebootTipTxt
+                        anchors.centerIn: parent
+                        text: "REBOOT"
+                        font.family: root.boldFont
+                        font.pixelSize: 9 * s
+                        font.letterSpacing: 1.5 * s
+                        font.weight: Font.Bold
+                        color: root.accentColor
+                        renderType: Text.NativeRendering
+                    }
+                }
+
+                MouseArea {
+                    id: astralRebootMa
+                    anchors.fill: parent
+                    hoverEnabled: true
+                    cursorShape: Qt.PointingHandCursor
+                    onClicked: {
+                        if (typeof sddm !== "undefined") sddm.reboot()
+                    }
+                }
+            }
+
+            // Cyber Power / Shutdown Pod
+            Rectangle {
+                id: astralPowerBtn
+                width: 38 * s
+                height: 38 * s
+                radius: 11 * s
+                anchors.verticalCenter: parent.verticalCenter
+                color: astralPowerMa.containsMouse
+                       ? Qt.rgba(255/255, 51/255, 102/255, 0.22)
+                       : Qt.rgba(14/255, 10/255, 26/255, 0.82)
+                border.color: astralPowerMa.containsMouse
+                              ? "#ff3366"
+                              : Qt.rgba(255/255, 51/255, 102/255, 0.35)
+                border.width: 1.5 * s
+
+                Behavior on color { ColorAnimation { duration: 150 } }
+                Behavior on border.color { ColorAnimation { duration: 150 } }
+
+                Text {
+                    id: astralPowerGlyph
+                    anchors.centerIn: parent
+                    text: "⏻"
+                    font.family: root.boldFont
+                    font.pixelSize: 15 * s
+                    font.weight: Font.Bold
+                    color: astralPowerMa.containsMouse ? "#ff3366" : root.subTextColor
+                    scale: astralPowerMa.containsMouse ? 1.15 : 1.0
+                    renderType: Text.NativeRendering
+
+                    Behavior on scale { NumberAnimation { duration: 150 } }
+                    Behavior on color { ColorAnimation { duration: 150 } }
+                }
+
+                // Hover Micro Tooltip Badge
+                Rectangle {
+                    anchors.top: parent.bottom
+                    anchors.topMargin: 8 * s
+                    anchors.horizontalCenter: parent.horizontalCenter
+                    width: astralPowerTipTxt.width + 16 * s
+                    height: 22 * s
+                    radius: 6 * s
+                    color: Qt.rgba(14/255, 10/255, 26/255, 0.95)
+                    border.color: Qt.rgba(255/255, 51/255, 102/255, 0.50)
+                    border.width: 1 * s
+                    opacity: astralPowerMa.containsMouse ? 1.0 : 0.0
+                    visible: opacity > 0
+                    z: 100
+
+                    Behavior on opacity { NumberAnimation { duration: 150 } }
+
+                    Text {
+                        id: astralPowerTipTxt
+                        anchors.centerIn: parent
+                        text: "SHUTDOWN"
+                        font.family: root.boldFont
+                        font.pixelSize: 9 * s
+                        font.letterSpacing: 1.5 * s
+                        font.weight: Font.Bold
+                        color: "#ff3366"
+                        renderType: Text.NativeRendering
+                    }
+                }
+
+                MouseArea {
+                    id: astralPowerMa
+                    anchors.fill: parent
+                    hoverEnabled: true
+                    cursorShape: Qt.PointingHandCursor
+                    onClicked: {
+                        if (typeof sddm !== "undefined") sddm.powerOff()
+                    }
+                }
+            }
+        }
+
+        // 3. Prohori Classic: Orbital Chronometer Classic Action Pills
+        Row {
+            id: hudRowClassic
+            visible: !root.isModernLayout
+            anchors.right: parent.right
+            anchors.rightMargin: root.marginR
             anchors.top: parent.top
             anchors.topMargin: 46 * s
             spacing: 12 * s
@@ -843,7 +1318,7 @@ Rectangle {
 
             // Session Selector
             CwAction {
-                id: sessionBtn
+                id: sessionBtnClassic
                 label: root.currentSessionDisplayName + (root.sessionMenuOpen ? " ▲" : " ▼")
                 isActive: root.sessionMenuOpen
                 onClicked: {
@@ -862,15 +1337,15 @@ Rectangle {
             id: sessionDropdown
             z: 7000
             anchors.top: parent.top
-            anchors.topMargin: 88 * s
+            anchors.topMargin: 92 * s
             anchors.right: parent.right
-            anchors.rightMargin: root.isAstralLayout ? 70 * s : (root.isMinimalLayout ? 130 * s : root.marginR)
+            anchors.rightMargin: root.isAstralLayout ? (70 * s + 100 * s) : (root.isMinimalLayout ? 130 * s : root.marginR)
             width: 250 * s
             height: root.sessionMenuOpen ? Math.min(300 * s, ((typeof sessionModel !== "undefined" ? sessionModel.rowCount() : 1) * 44 * s) + 20 * s) : 0
             clip: true
             radius: 14 * s
-            color: root.isLight ? "#f8fafc" : Qt.rgba(12/255, 17/255, 26/255, 0.92)
-            border.color: Qt.rgba(255, 255, 255, 0.10)
+            color: root.isLight ? "#f8fafc" : (root.isAstralLayout ? Qt.rgba(14/255, 10/255, 26/255, 0.95) : Qt.rgba(12/255, 17/255, 26/255, 0.92))
+            border.color: root.isAstralLayout ? Qt.rgba(root.accentColor.r, root.accentColor.g, root.accentColor.b, 0.40) : Qt.rgba(255, 255, 255, 0.10)
             border.width: 1.5 * s
             visible: height > 0
 
@@ -2260,243 +2735,253 @@ Rectangle {
                 Behavior on color { ColorAnimation { duration: 250 } }
                 Behavior on border.color { ColorAnimation { duration: 250 } }
 
-                Row {
-                    anchors.fill: parent
-                    anchors.leftMargin: 16 * s
-                    anchors.rightMargin: 16 * s
-                    spacing: 16 * s
+                // Left Section: User Identity Pod
+                Item {
+                    id: astralUserPod
+                    anchors.left: parent.left
+                    anchors.leftMargin: 20 * s
+                    anchors.verticalCenter: parent.verticalCenter
+                    width: 170 * s
+                    height: parent.height
 
-                    // Left Section: User Identity Pod
-                    Item {
-                        width: 175 * s
-                        height: parent.height
-
-                        Row {
-                            anchors.left: parent.left
-                            anchors.verticalCenter: parent.verticalCenter
-                            spacing: 12 * s
-
-                            // User Avatar Circle
-                            Rectangle {
-                                width: 44 * s
-                                height: 44 * s
-                                radius: 22 * s
-                                color: Qt.rgba(root.accentColor.r, root.accentColor.g, root.accentColor.b, 0.14)
-                                border.color: root.accentColor
-                                border.width: 1.5 * s
-                                anchors.verticalCenter: parent.verticalCenter
-
-                                Text {
-                                    anchors.centerIn: parent
-                                    text: root.currentUserDisplayName.length > 0 ? root.currentUserDisplayName.charAt(0) : "S"
-                                    font.family: root.boldFont
-                                    font.pixelSize: 18 * s
-                                    font.weight: Font.Black
-                                    color: root.accentColor
-                                    renderType: Text.NativeRendering
-                                }
-                            }
-
-                            // User Display Name & Status
-                            Column {
-                                anchors.verticalCenter: parent.verticalCenter
-                                spacing: 2 * s
-                                width: 110 * s
-
-                                Row {
-                                    spacing: 6 * s
-                                    Text {
-                                        text: root.currentUserDisplayName
-                                        font.family: root.boldFont
-                                        font.pixelSize: 14 * s
-                                        font.letterSpacing: 2 * s
-                                        font.weight: Font.Black
-                                        color: root.mainTextColor
-                                        elide: Text.ElideRight
-                                        renderType: Text.NativeRendering
-                                    }
-
-                                    Text {
-                                        visible: typeof userModel !== "undefined" && userModel && userModel.rowCount() > 1
-                                        text: root.userMenuOpen ? "▲" : "▼"
-                                        font.pixelSize: 9 * s
-                                        color: astralUserMa.containsMouse ? root.accentColor : root.dimTextColor
-                                        anchors.verticalCenter: parent.verticalCenter
-                                    }
-                                }
-
-                                Text {
-                                    text: "ASTRAL OPERATOR"
-                                    font.family: root.semiBoldFont
-                                    font.pixelSize: 9 * s
-                                    font.letterSpacing: 1.5 * s
-                                    font.weight: Font.DemiBold
-                                    color: root.dimTextColor
-                                    renderType: Text.NativeRendering
-                                }
-                            }
-                        }
-
-                        MouseArea {
-                            id: astralUserMa
-                            anchors.fill: parent
-                            hoverEnabled: true
-                            cursorShape: (typeof userModel !== "undefined" && userModel && userModel.rowCount() > 1) ? Qt.PointingHandCursor : Qt.ArrowCursor
-                            onClicked: {
-                                if (typeof userModel !== "undefined" && userModel.rowCount() > 1) {
-                                    root.userMenuOpen = !root.userMenuOpen
-                                    root.sessionMenuOpen = false
-                                }
-                            }
-                        }
-                    }
-
-                    // Vertical Divider 1
-                    Rectangle {
-                        width: 1 * s
-                        height: 38 * s
-                        color: Qt.rgba(255, 255, 255, 0.08)
+                    Row {
+                        anchors.left: parent.left
                         anchors.verticalCenter: parent.verticalCenter
-                    }
+                        spacing: 12 * s
 
-                    // Middle Section: Password Capsule & Laser Scanner
-                    Item {
-                        width: 300 * s
-                        height: parent.height
-                        clip: true
-
-                        // Scanning Laser Beam during authentication
+                        // User Avatar Circle
                         Rectangle {
-                            id: astralScanBar
-                            anchors.bottom: parent.bottom
-                            anchors.bottomMargin: 8 * s
-                            height: 2.5 * s
-                            width: parent.width * 0.40
-                            radius: 1 * s
-                            visible: root.isLoggingIn
-                            gradient: Gradient {
-                                orientation: Gradient.Horizontal
-                                GradientStop { position: 0.0; color: "transparent" }
-                                GradientStop { position: 0.5; color: root.accentColor }
-                                GradientStop { position: 1.0; color: "transparent" }
-                            }
-                            SequentialAnimation on x {
-                                running: root.isLoggingIn
-                                loops: Animation.Infinite
-                                NumberAnimation { from: 0; to: 300 * s - astralScanBar.width; duration: 420; easing.type: Easing.InOutQuad }
-                                NumberAnimation { from: 300 * s - astralScanBar.width; to: 0; duration: 420; easing.type: Easing.InOutQuad }
+                            width: 44 * s
+                            height: 44 * s
+                            radius: 22 * s
+                            color: Qt.rgba(root.accentColor.r, root.accentColor.g, root.accentColor.b, 0.14)
+                            border.color: root.accentColor
+                            border.width: 1.5 * s
+                            anchors.verticalCenter: parent.verticalCenter
+
+                            Text {
+                                anchors.centerIn: parent
+                                text: root.currentUserDisplayName.length > 0 ? root.currentUserDisplayName.charAt(0) : "S"
+                                font.family: root.boldFont
+                                font.pixelSize: 18 * s
+                                font.weight: Font.Black
+                                color: root.accentColor
+                                renderType: Text.NativeRendering
                             }
                         }
 
-                        // Key Icon
-                        Text {
-                            id: astralKeyIcon
-                            anchors.left: parent.left
-                            anchors.leftMargin: 4 * s
+                        // User Display Name & Status
+                        Column {
                             anchors.verticalCenter: parent.verticalCenter
-                            text: root.isErrorState ? "✕" : "⚿"
-                            font.pixelSize: 18 * s
-                            color: root.isErrorState ? root.errorColor : (root.isLoggingIn || astralPassInput.activeFocus ? root.accentColor : root.dimTextColor)
-                        }
+                            spacing: 2 * s
+                            width: 110 * s
 
-                        // Password Input Field
-                        TextInput {
-                            id: astralPassInput
-                            anchors.left: astralKeyIcon.right
-                            anchors.leftMargin: 12 * s
-                            anchors.right: parent.right
-                            anchors.rightMargin: 8 * s
-                            anchors.verticalCenter: parent.verticalCenter
-                            echoMode: TextInput.Password
-                            passwordCharacter: "•"
-                            color: root.mainTextColor
-                            font.family: root.boldFont
-                            font.pixelSize: 18 * s
-                            font.letterSpacing: 5 * s
-                            focus: root.isAstralLayout
-                            activeFocusOnPress: false
-                            cursorVisible: true
-                            enabled: !root.isLoggingIn
-                            renderType: Text.NativeRendering
-                            inputMethodHints: root.enableVirtualKeyboard ? Qt.ImhNone : (Qt.ImhHiddenText | Qt.ImhSensitiveData | Qt.ImhNoPredictiveText)
-                            onActiveFocusChanged: {
-                                if (activeFocus && !root.enableVirtualKeyboard) {
-                                    Qt.inputMethod.hide()
+                            Row {
+                                spacing: 6 * s
+                                Text {
+                                    text: root.currentUserDisplayName
+                                    font.family: root.boldFont
+                                    font.pixelSize: 14 * s
+                                    font.letterSpacing: 2 * s
+                                    font.weight: Font.Black
+                                    color: root.mainTextColor
+                                    elide: Text.ElideRight
+                                    renderType: Text.NativeRendering
+                                }
+
+                                Text {
+                                    visible: typeof userModel !== "undefined" && userModel && userModel.rowCount() > 1
+                                    text: root.userMenuOpen ? "▲" : "▼"
+                                    font.pixelSize: 9 * s
+                                    color: astralUserMa.containsMouse ? root.accentColor : root.dimTextColor
+                                    anchors.verticalCenter: parent.verticalCenter
                                 }
                             }
-                            Keys.onReturnPressed: root.startLoginSequence()
-                        }
 
-                        // Placeholder Text
-                        Text {
-                            anchors.left: astralKeyIcon.right
-                            anchors.leftMargin: 12 * s
-                            anchors.verticalCenter: parent.verticalCenter
-                            text: root.authSubtitle
-                            font.family: root.semiBoldFont
-                            font.pixelSize: 11 * s
-                            font.letterSpacing: 2 * s
-                            color: root.dimTextColor
-                            visible: astralPassInput.text.length === 0 && !astralPassInput.activeFocus && !root.isLoggingIn
-                        }
-
-                        MouseArea {
-                            anchors.fill: parent
-                            z: -1
-                            cursorShape: Qt.IBeamCursor
-                            onClicked: {
-                                astralPassInput.forceActiveFocus()
-                                if (!root.enableVirtualKeyboard) Qt.inputMethod.hide()
+                            Text {
+                                text: "ASTRAL OPERATOR"
+                                font.family: root.semiBoldFont
+                                font.pixelSize: 9 * s
+                                font.letterSpacing: 1.5 * s
+                                font.weight: Font.DemiBold
+                                color: root.dimTextColor
+                                renderType: Text.NativeRendering
                             }
                         }
                     }
 
-                    // Vertical Divider 2
-                    Rectangle {
-                        width: 1 * s
-                        height: 38 * s
-                        color: Qt.rgba(255, 255, 255, 0.08)
-                        anchors.verticalCenter: parent.verticalCenter
-                    }
-
-                    // Right Section: Unlock Action Trigger
-                    Rectangle {
-                        id: astralSubmitBtn
-                        width: 40 * s
-                        height: 40 * s
-                        radius: 10 * s
-                        anchors.verticalCenter: parent.verticalCenter
-                        color: root.isErrorState
-                               ? root.errorColor
-                               : ((astralPassInput.text.length > 0 || astralSubMa.containsMouse || root.isLoggingIn) ? root.accentColor : Qt.rgba(255, 255, 255, 0.06))
-
-                        Behavior on color { ColorAnimation { duration: 150 } }
-
-                        Text {
-                            id: astralSubmitIcon
-                            anchors.centerIn: parent
-                            text: root.isLoggingIn ? "◌" : (root.isErrorState ? "✕" : "→")
-                            font.family: root.boldFont
-                            font.pixelSize: root.isLoggingIn ? 20 * s : 18 * s
-                            font.weight: Font.Black
-                            color: (astralPassInput.text.length > 0 || astralSubMa.containsMouse || root.isLoggingIn || root.isErrorState) ? "#080511" : root.dimTextColor
-
-                            RotationAnimation on rotation {
-                                running: root.isLoggingIn
-                                loops: Animation.Infinite
-                                from: 0
-                                to: 360
-                                duration: 800
+                    MouseArea {
+                        id: astralUserMa
+                        anchors.fill: parent
+                        hoverEnabled: true
+                        cursorShape: (typeof userModel !== "undefined" && userModel && userModel.rowCount() > 1) ? Qt.PointingHandCursor : Qt.ArrowCursor
+                        onClicked: {
+                            if (typeof userModel !== "undefined" && userModel.rowCount() > 1) {
+                                root.userMenuOpen = !root.userMenuOpen
+                                root.sessionMenuOpen = false
                             }
                         }
+                    }
+                }
 
-                        MouseArea {
-                            id: astralSubMa
-                            anchors.fill: parent
-                            enabled: !root.isLoggingIn
-                            hoverEnabled: true
-                            cursorShape: Qt.PointingHandCursor
-                            onClicked: root.startLoginSequence()
+                // Vertical Divider 1
+                Rectangle {
+                    id: astralDiv1
+                    anchors.left: astralUserPod.right
+                    anchors.leftMargin: 14 * s
+                    anchors.verticalCenter: parent.verticalCenter
+                    width: 1 * s
+                    height: 38 * s
+                    color: Qt.rgba(255, 255, 255, 0.08)
+                }
+
+                // Right Section: Unlock Action Trigger
+                Rectangle {
+                    id: astralSubmitBtn
+                    anchors.right: parent.right
+                    anchors.rightMargin: 18 * s
+                    anchors.verticalCenter: parent.verticalCenter
+                    width: 42 * s
+                    height: 42 * s
+                    radius: 12 * s
+                    color: root.isErrorState
+                           ? root.errorColor
+                           : ((astralPassInput.text.length > 0 || astralSubMa.containsMouse || root.isLoggingIn) ? root.accentColor : Qt.rgba(255, 255, 255, 0.06))
+
+                    Behavior on color { ColorAnimation { duration: 150 } }
+
+                    Text {
+                        id: astralSubmitIcon
+                        anchors.centerIn: parent
+                        text: root.isLoggingIn ? "◌" : (root.isErrorState ? "✕" : "→")
+                        font.family: root.boldFont
+                        font.pixelSize: root.isLoggingIn ? 20 * s : 18 * s
+                        font.weight: Font.Black
+                        color: (astralPassInput.text.length > 0 || astralSubMa.containsMouse || root.isLoggingIn || root.isErrorState) ? "#080511" : root.dimTextColor
+
+                        RotationAnimation on rotation {
+                            running: root.isLoggingIn
+                            loops: Animation.Infinite
+                            from: 0
+                            to: 360
+                            duration: 800
+                        }
+                    }
+
+                    MouseArea {
+                        id: astralSubMa
+                        anchors.fill: parent
+                        enabled: !root.isLoggingIn
+                        hoverEnabled: true
+                        cursorShape: Qt.PointingHandCursor
+                        onClicked: root.startLoginSequence()
+                    }
+                }
+
+                // Vertical Divider 2
+                Rectangle {
+                    id: astralDiv2
+                    anchors.right: astralSubmitBtn.left
+                    anchors.rightMargin: 16 * s
+                    anchors.verticalCenter: parent.verticalCenter
+                    width: 1 * s
+                    height: 38 * s
+                    color: Qt.rgba(255, 255, 255, 0.08)
+                }
+
+                // Middle Section: Dynamically Stretched Password Capsule & Laser Scanner
+                Item {
+                    id: astralPassCapsule
+                    anchors.left: astralDiv1.right
+                    anchors.leftMargin: 16 * s
+                    anchors.right: astralDiv2.left
+                    anchors.rightMargin: 16 * s
+                    anchors.verticalCenter: parent.verticalCenter
+                    height: parent.height
+                    clip: true
+
+                    // Scanning Laser Beam during authentication
+                    Rectangle {
+                        id: astralScanBar
+                        anchors.bottom: parent.bottom
+                        anchors.bottomMargin: 8 * s
+                        height: 2.5 * s
+                        width: parent.width * 0.40
+                        radius: 1 * s
+                        visible: root.isLoggingIn
+                        gradient: Gradient {
+                            orientation: Gradient.Horizontal
+                            GradientStop { position: 0.0; color: "transparent" }
+                            GradientStop { position: 0.5; color: root.accentColor }
+                            GradientStop { position: 1.0; color: "transparent" }
+                        }
+                        SequentialAnimation on x {
+                            running: root.isLoggingIn
+                            loops: Animation.Infinite
+                            NumberAnimation { from: 0; to: astralPassCapsule.width - astralScanBar.width; duration: 420; easing.type: Easing.InOutQuad }
+                            NumberAnimation { from: astralPassCapsule.width - astralScanBar.width; to: 0; duration: 420; easing.type: Easing.InOutQuad }
+                        }
+                    }
+
+                    // Key Icon
+                    Text {
+                        id: astralKeyIcon
+                        anchors.left: parent.left
+                        anchors.leftMargin: 4 * s
+                        anchors.verticalCenter: parent.verticalCenter
+                        text: root.isErrorState ? "✕" : "⚿"
+                        font.pixelSize: 18 * s
+                        color: root.isErrorState ? root.errorColor : (root.isLoggingIn || astralPassInput.activeFocus ? root.accentColor : root.dimTextColor)
+                    }
+
+                    // Password Input Field
+                    TextInput {
+                        id: astralPassInput
+                        anchors.left: astralKeyIcon.right
+                        anchors.leftMargin: 12 * s
+                        anchors.right: parent.right
+                        anchors.rightMargin: 8 * s
+                        anchors.verticalCenter: parent.verticalCenter
+                        echoMode: TextInput.Password
+                        passwordCharacter: "•"
+                        color: root.mainTextColor
+                        font.family: root.boldFont
+                        font.pixelSize: 18 * s
+                        font.letterSpacing: 5 * s
+                        focus: root.isAstralLayout
+                        activeFocusOnPress: false
+                        cursorVisible: true
+                        enabled: !root.isLoggingIn
+                        renderType: Text.NativeRendering
+                        inputMethodHints: root.enableVirtualKeyboard ? Qt.ImhNone : (Qt.ImhHiddenText | Qt.ImhSensitiveData | Qt.ImhNoPredictiveText)
+                        onActiveFocusChanged: {
+                            if (activeFocus && !root.enableVirtualKeyboard) {
+                                Qt.inputMethod.hide()
+                            }
+                        }
+                        Keys.onReturnPressed: root.startLoginSequence()
+                    }
+
+                    // Placeholder Text
+                    Text {
+                        anchors.left: astralKeyIcon.right
+                        anchors.leftMargin: 12 * s
+                        anchors.verticalCenter: parent.verticalCenter
+                        text: root.authSubtitle
+                        font.family: root.semiBoldFont
+                        font.pixelSize: 11 * s
+                        font.letterSpacing: 2 * s
+                        color: root.dimTextColor
+                        visible: astralPassInput.text.length === 0 && !astralPassInput.activeFocus && !root.isLoggingIn
+                    }
+
+                    MouseArea {
+                        anchors.fill: parent
+                        z: -1
+                        cursorShape: Qt.IBeamCursor
+                        onClicked: {
+                            astralPassInput.forceActiveFocus()
+                            if (!root.enableVirtualKeyboard) Qt.inputMethod.hide()
                         }
                     }
                 }

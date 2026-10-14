@@ -16,13 +16,15 @@ Do **NOT** re-add legacy themes 4 to 9 or cyberpunk. The project is focused excl
    - Background: Clean dark obsidian slate (`backgrounds/minimal.jpg`) with micro-dot matrix and zero light blur.
    - Ambient Particles: Falling green micro-dust motes layer (32 particles, 1.2px–2.8px, staggered drift).
    - Dock: Center-right floating authentication card (`minAuthCard`).
+   - Top HUD: Monolithic unified obsidian status capsule (`minTopDeck`: `[ ● HYPRLAND ▾ │ ⟳ REBOOT │ ⏻ SHUTDOWN ]`) with pulsating hyper-mint status dot and hairline dividers.
    - Accent: `#00f5a0` (Hyper-Mint Green).
 
 3. **Prohori Astral** (`themes/astral.conf`):
    - Layout: Monumental Centered Architectural Chronometer (`astralCenterClock`) in upper-center, floating horizontal cyber-deck (`astralAuthDeck`) in lower-center, cyber seconds plasma rail, and centered celestial date.
    - Background: Deep cosmic abyss wallpaper (`backgrounds/astral.jpg`).
    - Ambient Atmosphere: Ethereal Rising Violet Fog & Volumetric Billowing Smoke plumes (16 staggered plumes with sinusoidal wafting, expanding radii, dissipating opacity, and triple undulating ground mist layers).
-   - Dock: Centered horizontal command console (`astralAuthDeck`, 600px × 76px) with integrated avatar pod, masked passcode capsule, scanning laser beam, and unlock trigger.
+   - Dock: Centered horizontal command console (`astralAuthDeck`, 600px × 76px) with integrated avatar pod, dynamically stretched passcode capsule, scanning laser beam, and unlock trigger with balanced 18px margin.
+   - Top HUD: Futuristic cyber telemetry cluster (`astralTopDeck`: `[ ◈ SYS // HYPRLAND ▾ ] [ ⟳ ] [ ⏻ ]`) with neon amethyst diamond, interactive hover pods, rotation animations, and micro tooltip badges.
    - Accent: `#b026ff` (Neon Amethyst / Violet).
 
 
