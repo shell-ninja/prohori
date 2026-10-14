@@ -582,7 +582,7 @@ Rectangle {
                 border.width: 1 * s
             }
 
-            // Horizontal Capsule Indicator Pill (iOS Liquid Glass Capsule)
+            // Horizontal Capsule Indicator Pill (iOS Liquid Glass / Watery Capsule)
             Rectangle {
                 id: indicatorPill
                 z: 10
@@ -591,18 +591,17 @@ Rectangle {
                 width: (clockContainer.secR - clockContainer.minR) + (120 * s)
                 height: 76 * s
                 radius: 38 * s
-                color: root.pillColor
-                opacity: 0.55
-                border.color: root.pillBorder
+                color: Qt.rgba(root.pillColor.r, root.pillColor.g, root.pillColor.b, 0.28)
+                border.color: Qt.rgba(56/255, 189/255, 248/255, 0.40)
                 border.width: 1.5 * s
 
-                // 1. Ambient Volumetric Liquid Aura behind the glass
+                // 1. Ambient Volumetric Liquid Aura (Diffused aquatic glow)
                 Rectangle {
                     anchors.centerIn: parent
-                    width: parent.width + 12 * s
-                    height: parent.height + 12 * s
+                    width: parent.width + 16 * s
+                    height: parent.height + 16 * s
                     radius: height * 0.5
-                    color: Qt.rgba(root.accentColor.r, root.accentColor.g, root.accentColor.b, 0.08)
+                    color: Qt.rgba(root.accentColor.r, root.accentColor.g, root.accentColor.b, 0.12)
                     z: -1
                 }
 
@@ -616,13 +615,21 @@ Rectangle {
                     color: root.accentColor
                 }
 
-                // 3. Center Vertical Separator Line
+                // 3. Center Vertical Separator Line (Liquid Capillary Column)
                 Rectangle {
                     x: parent.width * 0.5 - width * 0.5
                     anchors.verticalCenter: parent.verticalCenter
                     width: 1.5 * s
                     height: 32 * s
                     color: root.pillInnerLine
+
+                    Rectangle {
+                        anchors.centerIn: parent
+                        width: 4 * s
+                        height: 4 * s
+                        radius: 2 * s
+                        color: root.accentColor
+                    }
                 }
 
                 // 4. Right Dash Indicator (aligned with seconds track)
@@ -635,32 +642,51 @@ Rectangle {
                     color: root.accentColor
                 }
 
-                // 5. iOS Liquid Glass Specular Sheen (Curved Gloss Crescent)
+                // 5. iOS Liquid Glass Top Specular Meniscus (Convex surface tension reflection)
                 Rectangle {
                     anchors.top: parent.top
-                    anchors.topMargin: 1 * s
+                    anchors.topMargin: 1.5 * s
                     anchors.left: parent.left
-                    anchors.leftMargin: 2 * s
+                    anchors.leftMargin: 3 * s
                     anchors.right: parent.right
-                    anchors.rightMargin: 2 * s
-                    height: parent.height * 0.46
-                    radius: parent.radius - 1 * s
+                    anchors.rightMargin: 3 * s
+                    height: parent.height * 0.45
+                    radius: parent.radius - 1.5 * s
                     clip: true
                     gradient: Gradient {
                         orientation: Gradient.Vertical
-                        GradientStop { position: 0.0; color: Qt.rgba(255, 255, 255, 0.28) }
-                        GradientStop { position: 0.40; color: Qt.rgba(255, 255, 255, 0.10) }
+                        GradientStop { position: 0.0; color: Qt.rgba(255, 255, 255, 0.42) }
+                        GradientStop { position: 0.35; color: Qt.rgba(255, 255, 255, 0.12) }
                         GradientStop { position: 1.0; color: "transparent" }
                     }
                 }
 
-                // 6. Inner Refraction Bevel Rim
+                // 6. Bottom Liquid Meniscus Caustic (Internal total reflection)
+                Rectangle {
+                    anchors.bottom: parent.bottom
+                    anchors.bottomMargin: 1.5 * s
+                    anchors.left: parent.left
+                    anchors.leftMargin: 4 * s
+                    anchors.right: parent.right
+                    anchors.rightMargin: 4 * s
+                    height: parent.height * 0.35
+                    radius: parent.radius - 1.5 * s
+                    clip: true
+                    gradient: Gradient {
+                        orientation: Gradient.Vertical
+                        GradientStop { position: 0.0; color: "transparent" }
+                        GradientStop { position: 0.60; color: Qt.rgba(56/255, 189/255, 248/255, 0.08) }
+                        GradientStop { position: 1.0; color: Qt.rgba(255, 255, 255, 0.22) }
+                    }
+                }
+
+                // 7. Inner Refraction Bevel Rim
                 Rectangle {
                     anchors.fill: parent
                     anchors.margins: 1.5 * s
                     radius: parent.radius - 1.5 * s
                     color: "transparent"
-                    border.color: Qt.rgba(255, 255, 255, 0.12)
+                    border.color: Qt.rgba(255, 255, 255, 0.16)
                     border.width: 1 * s
                 }
             }
@@ -669,6 +695,7 @@ Rectangle {
             Repeater {
                 model: 60
                 delegate: Item {
+                    id: minDialItem
                     z: 5
                     property real base: index * 6
                     property real relAngle: {
@@ -677,6 +704,8 @@ Rectangle {
                         if (a < -180) a += 360
                         return a
                     }
+                    property real liquidFactor: Math.max(0.0, 1.0 - Math.abs(relAngle) / 4.2)
+                    property real liquidCurvature: liquidFactor > 0 ? (0.5 * (1.0 - Math.cos(liquidFactor * Math.PI))) : 0.0
                     property real spotlight: Math.max(0, 1.0 - Math.abs(relAngle) / 5.5)
                     property bool isMajor: index % 5 === 0
                     property real disp: (base + root.smoothMinAngle) * Math.PI / 180
@@ -685,37 +714,86 @@ Rectangle {
 
                     visible: tx > -700 * s && tx < 2200 * s
 
-                    // Tick Mark
+                    // Tick Mark (Reacts to liquid lens)
                     Rectangle {
                         x: parent.tx - width / 2
                         y: parent.ty - height / 2
-                        width: isMajor ? 2.5 * s : 1.2 * s
-                        height: isMajor ? 14 * s : 8 * s
-                        color: root.isLight
-                               ? Qt.rgba(0, 0, 0, spotlight > 0 ? 1.0 : (isMajor ? 0.75 : 0.40))
-                               : Qt.rgba(1, 1, 1, spotlight > 0 ? 1.0 : (isMajor ? 0.40 : 0.18))
+                        width: (isMajor ? 2.5 * s : 1.2 * s) * (1.0 + 0.35 * minDialItem.liquidCurvature)
+                        height: (isMajor ? 14 * s : 8 * s) * (1.0 + 0.30 * minDialItem.liquidCurvature)
+                        radius: width * 0.5
+                        color: {
+                            if (minDialItem.liquidCurvature > 0) {
+                                return Qt.rgba(1.0, 1.0, 1.0, 0.40 + 0.60 * minDialItem.liquidCurvature)
+                            } else {
+                                return root.isLight
+                                       ? Qt.rgba(0, 0, 0, spotlight > 0 ? 1.0 : (isMajor ? 0.75 : 0.40))
+                                       : Qt.rgba(1, 1, 1, spotlight > 0 ? 1.0 : (isMajor ? 0.40 : 0.18))
+                            }
+                        }
                         rotation: disp * 180 / Math.PI + 90
                         antialiasing: true
                         transformOrigin: Item.Center
+
+                        // Cyan Liquid Dispersion Caustic under water
+                        Rectangle {
+                            anchors.centerIn: parent
+                            width: parent.width + 4 * s
+                            height: parent.height + 4 * s
+                            radius: width * 0.5
+                            color: Qt.rgba(root.accentColor.r, root.accentColor.g, root.accentColor.b, 0.45 * minDialItem.liquidCurvature)
+                            visible: isMajor && minDialItem.liquidCurvature > 0.08
+                            z: -1
+                        }
                     }
 
-                    // Major Minute Numbers (40, 45, 50, 55, 00, 05...)
-                    Text {
-                        visible: isMajor && Math.abs(relAngle) > 3.2
+                    // Major Minute Numbers (Pass under liquid glass with liquid refraction)
+                    Item {
+                        visible: isMajor
                         property real nRad: clockContainer.minR - 36 * s
                         x: clockContainer.cx + nRad * Math.cos(disp) - width / 2
                         y: clockContainer.cy + nRad * Math.sin(disp) - height / 2
-                        text: String(index).padStart(2, '0')
-                        font.family: root.boldFont
-                        font.pixelSize: 22 * s
-                        font.weight: spotlight > 0.4 ? Font.Black : Font.Bold
-                        color: root.isLight
-                               ? Qt.rgba(0, 0, 0, spotlight > 0 ? (0.6 + 0.4 * spotlight) : 0.5)
-                               : Qt.rgba(1, 1, 1, spotlight > 0 ? (0.45 + spotlight * 0.55) : 0.32)
+                        width: minNumTxt.width
+                        height: minNumTxt.height
                         rotation: disp * 180 / Math.PI
                         transformOrigin: Item.Center
-                        antialiasing: true
-                        renderType: Text.NativeRendering
+                        scale: 1.0 + (0.35 * minDialItem.liquidCurvature)
+
+                        // 1. Chromatic Dispersion & Caustic Glow Halo (Liquid Refraction Under Water)
+                        Text {
+                            anchors.centerIn: parent
+                            x: (minDialItem.relAngle > 0 ? 1.5 * s : -1.5 * s) * minDialItem.liquidCurvature
+                            y: 1.5 * s * minDialItem.liquidCurvature
+                            text: String(index).padStart(2, '0')
+                            font.family: root.boldFont
+                            font.pixelSize: 22 * s
+                            font.weight: Font.Black
+                            color: Qt.rgba(root.accentColor.r, root.accentColor.g, root.accentColor.b, 0.75 * minDialItem.liquidCurvature)
+                            scale: 1.08
+                            visible: minDialItem.liquidCurvature > 0.06
+                            renderType: Text.NativeRendering
+                            antialiasing: true
+                        }
+
+                        // 2. Primary High-Definition Refracted Minute Number
+                        Text {
+                            id: minNumTxt
+                            anchors.centerIn: parent
+                            text: String(index).padStart(2, '0')
+                            font.family: root.boldFont
+                            font.pixelSize: 22 * s
+                            font.weight: minDialItem.liquidCurvature > 0.25 ? Font.Black : Font.Bold
+                            color: {
+                                if (minDialItem.liquidCurvature > 0) {
+                                    return Qt.rgba(1.0, 1.0, 1.0, 0.45 + 0.55 * minDialItem.liquidCurvature)
+                                } else {
+                                    return root.isLight
+                                           ? Qt.rgba(0, 0, 0, 0.50)
+                                           : Qt.rgba(1, 1, 1, 0.32)
+                                }
+                            }
+                            renderType: Text.NativeRendering
+                            antialiasing: true
+                        }
                     }
                 }
             }
@@ -724,6 +802,7 @@ Rectangle {
             Repeater {
                 model: 60
                 delegate: Item {
+                    id: secDialItem
                     z: 5
                     property real base: index * 6
                     property real relAngle: {
@@ -732,6 +811,8 @@ Rectangle {
                         if (a < -180) a += 360
                         return a
                     }
+                    property real liquidFactor: Math.max(0.0, 1.0 - Math.abs(relAngle) / 4.2)
+                    property real liquidCurvature: liquidFactor > 0 ? (0.5 * (1.0 - Math.cos(liquidFactor * Math.PI))) : 0.0
                     property real spotlight: Math.max(0, 1.0 - Math.abs(relAngle) / 5.5)
                     property bool isMajor: index % 5 === 0
                     property real disp: (base + root.smoothSecAngle) * Math.PI / 180
@@ -740,37 +821,86 @@ Rectangle {
 
                     visible: tx > -700 * s && tx < 2200 * s
 
-                    // Tick Mark
+                    // Tick Mark (Reacts to liquid lens)
                     Rectangle {
                         x: parent.tx - width / 2
                         y: parent.ty - height / 2
-                        width: isMajor ? 2.2 * s : 1.2 * s
-                        height: isMajor ? 14 * s : 8 * s
-                        color: root.isLight
-                               ? Qt.rgba(0, 0, 0, spotlight > 0 ? 1.0 : (isMajor ? 0.75 : 0.40))
-                               : Qt.rgba(1, 1, 1, spotlight > 0 ? 1.0 : (isMajor ? 0.40 : 0.18))
+                        width: (isMajor ? 2.2 * s : 1.2 * s) * (1.0 + 0.35 * secDialItem.liquidCurvature)
+                        height: (isMajor ? 14 * s : 8 * s) * (1.0 + 0.30 * secDialItem.liquidCurvature)
+                        radius: width * 0.5
+                        color: {
+                            if (secDialItem.liquidCurvature > 0) {
+                                return Qt.rgba(1.0, 1.0, 1.0, 0.40 + 0.60 * secDialItem.liquidCurvature)
+                            } else {
+                                return root.isLight
+                                       ? Qt.rgba(0, 0, 0, spotlight > 0 ? 1.0 : (isMajor ? 0.75 : 0.40))
+                                       : Qt.rgba(1, 1, 1, spotlight > 0 ? 1.0 : (isMajor ? 0.40 : 0.18))
+                            }
+                        }
                         rotation: disp * 180 / Math.PI + 90
                         antialiasing: true
                         transformOrigin: Item.Center
+
+                        // Cyan Liquid Dispersion Caustic under water
+                        Rectangle {
+                            anchors.centerIn: parent
+                            width: parent.width + 4 * s
+                            height: parent.height + 4 * s
+                            radius: width * 0.5
+                            color: Qt.rgba(root.accentColor.r, root.accentColor.g, root.accentColor.b, 0.45 * secDialItem.liquidCurvature)
+                            visible: isMajor && secDialItem.liquidCurvature > 0.08
+                            z: -1
+                        }
                     }
 
-                    // Major Second Numbers (Placed on the outside of the track)
-                    Text {
-                        visible: isMajor && Math.abs(relAngle) > 3.2
+                    // Major Second Numbers (Pass under liquid glass with liquid refraction)
+                    Item {
+                        visible: isMajor
                         property real nRad: clockContainer.secR + 32 * s
                         x: clockContainer.cx + nRad * Math.cos(disp) - width / 2
                         y: clockContainer.cy + nRad * Math.sin(disp) - height / 2
-                        text: String(index).padStart(2, '0')
-                        font.family: root.boldFont
-                        font.pixelSize: 18 * s
-                        font.weight: spotlight > 0.4 ? Font.Black : Font.Bold
-                        color: root.isLight
-                               ? Qt.rgba(0, 0, 0, spotlight > 0 ? (0.6 + 0.4 * spotlight) : 0.5)
-                               : Qt.rgba(1, 1, 1, spotlight > 0 ? (0.45 + spotlight * 0.55) : 0.30)
+                        width: secNumTxt.width
+                        height: secNumTxt.height
                         rotation: disp * 180 / Math.PI
                         transformOrigin: Item.Center
-                        antialiasing: true
-                        renderType: Text.NativeRendering
+                        scale: 1.0 + (0.35 * secDialItem.liquidCurvature)
+
+                        // 1. Chromatic Dispersion & Caustic Glow Halo (Liquid Refraction Under Water)
+                        Text {
+                            anchors.centerIn: parent
+                            x: (secDialItem.relAngle > 0 ? 1.5 * s : -1.5 * s) * secDialItem.liquidCurvature
+                            y: 1.5 * s * secDialItem.liquidCurvature
+                            text: String(index).padStart(2, '0')
+                            font.family: root.boldFont
+                            font.pixelSize: 18 * s
+                            font.weight: Font.Black
+                            color: Qt.rgba(root.accentColor.r, root.accentColor.g, root.accentColor.b, 0.75 * secDialItem.liquidCurvature)
+                            scale: 1.08
+                            visible: secDialItem.liquidCurvature > 0.06
+                            renderType: Text.NativeRendering
+                            antialiasing: true
+                        }
+
+                        // 2. Primary High-Definition Refracted Second Number
+                        Text {
+                            id: secNumTxt
+                            anchors.centerIn: parent
+                            text: String(index).padStart(2, '0')
+                            font.family: root.boldFont
+                            font.pixelSize: 18 * s
+                            font.weight: secDialItem.liquidCurvature > 0.25 ? Font.Black : Font.Bold
+                            color: {
+                                if (secDialItem.liquidCurvature > 0) {
+                                    return Qt.rgba(1.0, 1.0, 1.0, 0.45 + 0.55 * secDialItem.liquidCurvature)
+                                } else {
+                                    return root.isLight
+                                           ? Qt.rgba(0, 0, 0, 0.50)
+                                           : Qt.rgba(1, 1, 1, 0.30)
+                                }
+                            }
+                            renderType: Text.NativeRendering
+                            antialiasing: true
+                        }
                     }
                 }
             }
