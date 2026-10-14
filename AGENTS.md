@@ -8,8 +8,8 @@ Do **NOT** re-add legacy themes 4 to 9 or cyberpunk. The project is focused excl
 
 1. **Prohori Classic** (`themes/default.conf`):
    - Layout: Concentric orbital chronometer dials with windup rotation on submit.
-   - Indicator: Translucent Liquid Glass chronometer capsule (`indicatorPill`) with ambient volumetric cyan aura, curved glossy specular sheen, internal refraction bevels, and live minute & second numbers (`MIN` / `SEC`) illuminated under the liquid glass. Orbit rings and dial ticks dive and sweep under the glass.
-   - Top HUD: Aeronautical chronometer liquid capsule (`classicTopDeck`: `[ ⊚ HYPRLAND ▾ │ ⟳ REBOOT │ ⏻ SHUTDOWN ]`) with celestial concentric ring emblem, reactive hover spins, and hairline cyan dividers.
+   - Indicator: Translucent Liquid Glass chronometer capsule (`indicatorPill`) with ambient volumetric cyan aura, curved glossy specular sheen, internal refraction bevels, and original tick indicators. Rotating dial numbers and tick marks remain visible as they sweep smoothly under the liquid glass.
+   - Top HUD: Classic 3-button action row (`hudRowClassic`: `[ REBOOT ] [ SHUTDOWN ] [ SESSION ▾ ]`) with iOS liquid glass specular sheen, inner refraction bevels, and ambient glow.
    - Background: Dark atmospheric radial vignette (`backgrounds/default.jpg`).
    - Accent: `#38bdf8` (Cyan Blue).
 

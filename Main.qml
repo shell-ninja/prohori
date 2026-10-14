@@ -582,7 +582,7 @@ Rectangle {
                 border.width: 1 * s
             }
 
-            // Horizontal Capsule Indicator Pill (Liquid Glass Chrono Chamber)
+            // Horizontal Capsule Indicator Pill (iOS Liquid Glass Capsule)
             Rectangle {
                 id: indicatorPill
                 z: 10
@@ -591,254 +591,76 @@ Rectangle {
                 width: (clockContainer.secR - clockContainer.minR) + (120 * s)
                 height: 76 * s
                 radius: 38 * s
-                color: Qt.rgba(8/255, 18/255, 34/255, 0.72)
-                border.color: Qt.rgba(56/255, 189/255, 248/255, 0.45)
+                color: root.pillColor
+                opacity: 0.55
+                border.color: root.pillBorder
                 border.width: 1.5 * s
 
-                // 1. Ambient Volumetric Liquid Cyan Glow Aura behind the glass
+                // 1. Ambient Volumetric Liquid Aura behind the glass
                 Rectangle {
                     anchors.centerIn: parent
-                    width: parent.width + 18 * s
-                    height: parent.height + 18 * s
-                    radius: (height) * 0.5
-                    color: Qt.rgba(56/255, 189/255, 248/255, 0.12)
+                    width: parent.width + 12 * s
+                    height: parent.height + 12 * s
+                    radius: height * 0.5
+                    color: Qt.rgba(root.accentColor.r, root.accentColor.g, root.accentColor.b, 0.08)
                     z: -1
                 }
 
-                // 2. Liquid Glass Base Internal Gradient
+                // 2. Left Dash Indicator (aligned with minute track)
                 Rectangle {
-                    anchors.fill: parent
-                    anchors.margins: 1.5 * s
-                    radius: parent.radius - 1.5 * s
-                    gradient: Gradient {
-                        orientation: Gradient.Vertical
-                        GradientStop { position: 0.0; color: Qt.rgba(14/255, 32/255, 58/255, 0.55) }
-                        GradientStop { position: 0.5; color: Qt.rgba(6/255, 14/255, 28/255, 0.75) }
-                        GradientStop { position: 1.0; color: Qt.rgba(10/255, 24/255, 44/255, 0.65) }
-                    }
-                }
-
-                // 3. Liquid Well Lenses (Under numbers)
-                // Left Minute Well
-                Rectangle {
-                    anchors.left: parent.left
-                    anchors.leftMargin: 16 * s
+                    x: 60 * s - width * 0.5
                     anchors.verticalCenter: parent.verticalCenter
-                    width: (parent.width * 0.5) - 24 * s
-                    height: 54 * s
-                    radius: 27 * s
-                    color: Qt.rgba(56/255, 189/255, 248/255, 0.08)
-                    border.color: Qt.rgba(56/255, 189/255, 248/255, 0.18)
-                    border.width: 1 * s
+                    width: 20 * s
+                    height: 3 * s
+                    radius: 1.5 * s
+                    color: root.accentColor
                 }
 
-                // Right Second Well
+                // 3. Center Vertical Separator Line
                 Rectangle {
-                    anchors.right: parent.right
-                    anchors.rightMargin: 16 * s
+                    x: parent.width * 0.5 - width * 0.5
                     anchors.verticalCenter: parent.verticalCenter
-                    width: (parent.width * 0.5) - 24 * s
-                    height: 54 * s
-                    radius: 27 * s
-                    color: Qt.rgba(56/255, 189/255, 248/255, 0.08)
-                    border.color: Qt.rgba(56/255, 189/255, 248/255, 0.18)
-                    border.width: 1 * s
+                    width: 1.5 * s
+                    height: 32 * s
+                    color: root.pillInnerLine
                 }
 
-                // 4. Numbers Under Liquid Glass
-                // Left Chamber: Current Minute Display
-                Item {
-                    anchors.left: parent.left
-                    anchors.leftMargin: 16 * s
-                    anchors.right: pillDivider.left
-                    anchors.rightMargin: 8 * s
-                    height: parent.height
-
-                    Column {
-                        anchors.centerIn: parent
-                        spacing: 1 * s
-
-                        Text {
-                            anchors.horizontalCenter: parent.horizontalCenter
-                            text: "MIN"
-                            font.family: root.boldFont
-                            font.pixelSize: 8 * s
-                            font.letterSpacing: 2.5 * s
-                            font.weight: Font.Bold
-                            color: root.accentColor
-                            opacity: 0.85
-                            renderType: Text.NativeRendering
-                        }
-
-                        Item {
-                            anchors.horizontalCenter: parent.horizontalCenter
-                            width: minNum.width
-                            height: minNum.height
-
-                            Text {
-                                anchors.centerIn: parent
-                                y: 1 * s
-                                text: String(root.curM).padStart(2, '0')
-                                font.family: root.boldFont
-                                font.pixelSize: 26 * s
-                                font.weight: Font.Black
-                                color: Qt.rgba(56/255, 189/255, 248/255, 0.35)
-                                renderType: Text.NativeRendering
-                            }
-
-                            Text {
-                                id: minNum
-                                anchors.centerIn: parent
-                                text: String(root.curM).padStart(2, '0')
-                                font.family: root.boldFont
-                                font.pixelSize: 26 * s
-                                font.weight: Font.Black
-                                color: root.mainTextColor
-                                renderType: Text.NativeRendering
-                            }
-                        }
-                    }
-
-                    // Liquid Vernier Alignment Mark
-                    Rectangle {
-                        anchors.bottom: parent.bottom
-                        anchors.bottomMargin: 9 * s
-                        anchors.horizontalCenter: parent.horizontalCenter
-                        width: 14 * s
-                        height: 2.5 * s
-                        radius: 1.2 * s
-                        color: root.accentColor
-                        opacity: 0.85
-                    }
-                }
-
-                // Center Illuminated Liquid Capillary Column
+                // 4. Right Dash Indicator (aligned with seconds track)
                 Rectangle {
-                    id: pillDivider
-                    anchors.centerIn: parent
-                    width: 2 * s
-                    height: 38 * s
-                    radius: 1 * s
-                    gradient: Gradient {
-                        orientation: Gradient.Vertical
-                        GradientStop { position: 0.0; color: "transparent" }
-                        GradientStop { position: 0.2; color: root.accentColor }
-                        GradientStop { position: 0.8; color: root.accentColor }
-                        GradientStop { position: 1.0; color: "transparent" }
-                    }
-
-                    Rectangle {
-                        anchors.centerIn: parent
-                        width: 6 * s
-                        height: 34 * s
-                        radius: 3 * s
-                        color: Qt.rgba(root.accentColor.r, root.accentColor.g, root.accentColor.b, 0.25)
-                        z: -1
-                    }
+                    x: parent.width - (60 * s) - width * 0.5
+                    anchors.verticalCenter: parent.verticalCenter
+                    width: 20 * s
+                    height: 3 * s
+                    radius: 1.5 * s
+                    color: root.accentColor
                 }
 
-                // Right Chamber: Current Second Display
-                Item {
-                    anchors.left: pillDivider.right
-                    anchors.leftMargin: 8 * s
-                    anchors.right: parent.right
-                    anchors.rightMargin: 16 * s
-                    height: parent.height
-
-                    Column {
-                        anchors.centerIn: parent
-                        spacing: 1 * s
-
-                        Text {
-                            anchors.horizontalCenter: parent.horizontalCenter
-                            text: "SEC"
-                            font.family: root.boldFont
-                            font.pixelSize: 8 * s
-                            font.letterSpacing: 2.5 * s
-                            font.weight: Font.Bold
-                            color: root.accentColor
-                            opacity: 0.85
-                            renderType: Text.NativeRendering
-                        }
-
-                        Item {
-                            anchors.horizontalCenter: parent.horizontalCenter
-                            width: secNum.width
-                            height: secNum.height
-
-                            Text {
-                                anchors.centerIn: parent
-                                y: 1 * s
-                                text: String(root.curS).padStart(2, '0')
-                                font.family: root.boldFont
-                                font.pixelSize: 26 * s
-                                font.weight: Font.Black
-                                color: Qt.rgba(56/255, 189/255, 248/255, 0.35)
-                                renderType: Text.NativeRendering
-                            }
-
-                            Text {
-                                id: secNum
-                                anchors.centerIn: parent
-                                text: String(root.curS).padStart(2, '0')
-                                font.family: root.boldFont
-                                font.pixelSize: 26 * s
-                                font.weight: Font.Black
-                                color: root.accentColor
-                                renderType: Text.NativeRendering
-                            }
-                        }
-                    }
-
-                    // Liquid Vernier Alignment Mark
-                    Rectangle {
-                        anchors.bottom: parent.bottom
-                        anchors.bottomMargin: 9 * s
-                        anchors.horizontalCenter: parent.horizontalCenter
-                        width: 14 * s
-                        height: 2.5 * s
-                        radius: 1.2 * s
-                        color: root.accentColor
-                        opacity: 0.85
-                    }
-                }
-
-                // 5. Liquid Glass Curved Top Specular Sheen (Curved Gloss Crescent)
+                // 5. iOS Liquid Glass Specular Sheen (Curved Gloss Crescent)
                 Rectangle {
                     anchors.top: parent.top
-                    anchors.topMargin: 1.5 * s
+                    anchors.topMargin: 1 * s
                     anchors.left: parent.left
                     anchors.leftMargin: 2 * s
                     anchors.right: parent.right
                     anchors.rightMargin: 2 * s
                     height: parent.height * 0.46
-                    radius: parent.radius - 2 * s
+                    radius: parent.radius - 1 * s
                     clip: true
                     gradient: Gradient {
                         orientation: Gradient.Vertical
-                        GradientStop { position: 0.0; color: Qt.rgba(255, 255, 255, 0.35) }
-                        GradientStop { position: 0.35; color: Qt.rgba(255, 255, 255, 0.16) }
-                        GradientStop { position: 1.0; color: Qt.rgba(255, 255, 255, 0.01) }
+                        GradientStop { position: 0.0; color: Qt.rgba(255, 255, 255, 0.28) }
+                        GradientStop { position: 0.40; color: Qt.rgba(255, 255, 255, 0.10) }
+                        GradientStop { position: 1.0; color: "transparent" }
                     }
                 }
 
-                // 6. Bottom Internal Refraction Line
-                Rectangle {
-                    anchors.bottom: parent.bottom
-                    anchors.bottomMargin: 2 * s
-                    anchors.horizontalCenter: parent.horizontalCenter
-                    width: parent.width * 0.70
-                    height: 1 * s
-                    color: Qt.rgba(56/255, 189/255, 248/255, 0.30)
-                }
-
-                // 7. Inner Refraction Bevel Rim
+                // 6. Inner Refraction Bevel Rim
                 Rectangle {
                     anchors.fill: parent
                     anchors.margins: 1.5 * s
                     radius: parent.radius - 1.5 * s
                     color: "transparent"
-                    border.color: Qt.rgba(255, 255, 255, 0.16)
+                    border.color: Qt.rgba(255, 255, 255, 0.12)
                     border.width: 1 * s
                 }
             }
@@ -1507,256 +1329,43 @@ Rectangle {
             }
         }
 
-        // 3. Prohori Classic: Aeronautical Chronometer Liquid Glass Capsule
-        Rectangle {
-            id: classicTopDeck
+        // 3. Prohori Classic: Orbital Chronometer Classic Action Pills (Liquid Glass Effect)
+        Row {
+            id: hudRowClassic
             visible: !root.isModernLayout
             anchors.right: parent.right
             anchors.rightMargin: root.marginR
             anchors.top: parent.top
             anchors.topMargin: 46 * s
-            height: 38 * s
-            width: classicDeckRow.width + 24 * s
-            radius: 19 * s
-            color: Qt.rgba(8/255, 18/255, 34/255, 0.78)
-            border.color: Qt.rgba(56/255, 189/255, 248/255, 0.35)
-            border.width: 1 * s
+            spacing: 12 * s
 
-            // Liquid Glass Top Specular Sheen
-            Rectangle {
-                anchors.top: parent.top
-                anchors.topMargin: 1 * s
-                anchors.left: parent.left
-                anchors.leftMargin: 2 * s
-                anchors.right: parent.right
-                anchors.rightMargin: 2 * s
-                height: parent.height * 0.45
-                radius: parent.radius - 1 * s
-                clip: true
-                gradient: Gradient {
-                    orientation: Gradient.Vertical
-                    GradientStop { position: 0.0; color: Qt.rgba(255, 255, 255, 0.22) }
-                    GradientStop { position: 1.0; color: Qt.rgba(255, 255, 255, 0.01) }
+            // Reboot Action
+            CwAction {
+                label: "REBOOT"
+                onClicked: {
+                    if (typeof sddm !== "undefined") sddm.reboot()
                 }
             }
 
-            Row {
-                id: classicDeckRow
-                anchors.centerIn: parent
-                spacing: 12 * s
-
-                // Classic Session Selector Pill
-                Item {
-                    id: classicSessionBtn
-                    width: classicSessContent.width + 16 * s
-                    height: 28 * s
-                    anchors.verticalCenter: parent.verticalCenter
-
-                    Rectangle {
-                        anchors.fill: parent
-                        radius: 14 * s
-                        color: classicSessMa.containsMouse || root.sessionMenuOpen
-                               ? Qt.rgba(56/255, 189/255, 248/255, 0.16)
-                               : "transparent"
-                        border.color: classicSessMa.containsMouse || root.sessionMenuOpen
-                                      ? Qt.rgba(56/255, 189/255, 248/255, 0.45)
-                                      : "transparent"
-                        border.width: 1 * s
-
-                        Behavior on color { ColorAnimation { duration: 150 } }
-                        Behavior on border.color { ColorAnimation { duration: 150 } }
-
-                        Row {
-                            id: classicSessContent
-                            anchors.centerIn: parent
-                            spacing: 8 * s
-
-                            // Concentric Celestial Ring Icon
-                            Text {
-                                text: "⊚"
-                                font.pixelSize: 13 * s
-                                color: root.accentColor
-                                anchors.verticalCenter: parent.verticalCenter
-                                renderType: Text.NativeRendering
-                            }
-
-                            Text {
-                                text: root.currentSessionDisplayName.toUpperCase()
-                                color: classicSessMa.containsMouse || root.sessionMenuOpen ? root.accentColor : root.mainTextColor
-                                font.family: root.boldFont
-                                font.pixelSize: 11 * s
-                                font.letterSpacing: 2 * s
-                                font.weight: Font.Bold
-                                anchors.verticalCenter: parent.verticalCenter
-                                renderType: Text.NativeRendering
-                            }
-
-                            Text {
-                                text: root.sessionMenuOpen ? "▲" : "▼"
-                                color: classicSessMa.containsMouse || root.sessionMenuOpen ? root.accentColor : root.dimTextColor
-                                font.pixelSize: 8 * s
-                                anchors.verticalCenter: parent.verticalCenter
-                            }
-                        }
-                    }
-
-                    MouseArea {
-                        id: classicSessMa
-                        anchors.fill: parent
-                        hoverEnabled: true
-                        cursorShape: Qt.PointingHandCursor
-                        onClicked: {
-                            if (typeof sessionModel !== "undefined" && sessionModel.rowCount() > 1) {
-                                root.sessionMenuOpen = !root.sessionMenuOpen
-                                root.userMenuOpen = false
-                            } else if (typeof sessionModel !== "undefined" && sessionModel.rowCount() > 0) {
-                                root.sessionIndex = (root.sessionIndex + 1) % sessionModel.rowCount()
-                            }
-                        }
-                    }
+            // Shutdown Action
+            CwAction {
+                label: "SHUTDOWN"
+                onClicked: {
+                    if (typeof sddm !== "undefined") sddm.powerOff()
                 }
+            }
 
-                // Vertical Divider 1
-                Rectangle {
-                    width: 1 * s
-                    height: 16 * s
-                    color: Qt.rgba(56/255, 189/255, 248/255, 0.22)
-                    anchors.verticalCenter: parent.verticalCenter
-                }
-
-                // Classic Reboot Action
-                Item {
-                    id: classicRebootBtn
-                    width: classicRebootRow.width + 16 * s
-                    height: 28 * s
-                    anchors.verticalCenter: parent.verticalCenter
-
-                    Rectangle {
-                        anchors.fill: parent
-                        radius: 14 * s
-                        color: classicRebootMa.containsMouse
-                               ? Qt.rgba(56/255, 189/255, 248/255, 0.16)
-                               : "transparent"
-                        border.color: classicRebootMa.containsMouse
-                                      ? Qt.rgba(56/255, 189/255, 248/255, 0.40)
-                                      : "transparent"
-                        border.width: 1 * s
-
-                        Behavior on color { ColorAnimation { duration: 150 } }
-                        Behavior on border.color { ColorAnimation { duration: 150 } }
-
-                        Row {
-                            id: classicRebootRow
-                            anchors.centerIn: parent
-                            spacing: 6 * s
-
-                            Text {
-                                text: "⟳"
-                                font.family: root.boldFont
-                                font.pixelSize: 13 * s
-                                font.weight: Font.Bold
-                                color: classicRebootMa.containsMouse ? root.accentColor : root.subTextColor
-                                rotation: classicRebootMa.containsMouse ? 45 : 0
-                                scale: classicRebootMa.containsMouse ? 1.12 : 1.0
-                                anchors.verticalCenter: parent.verticalCenter
-                                renderType: Text.NativeRendering
-
-                                Behavior on rotation { NumberAnimation { duration: 250; easing.type: Easing.OutBack } }
-                                Behavior on scale { NumberAnimation { duration: 150 } }
-                            }
-
-                            Text {
-                                text: "REBOOT"
-                                font.family: root.boldFont
-                                font.pixelSize: 10 * s
-                                font.letterSpacing: 1.8 * s
-                                font.weight: Font.Bold
-                                color: classicRebootMa.containsMouse ? root.accentColor : root.subTextColor
-                                anchors.verticalCenter: parent.verticalCenter
-                                renderType: Text.NativeRendering
-                            }
-                        }
-                    }
-
-                    MouseArea {
-                        id: classicRebootMa
-                        anchors.fill: parent
-                        hoverEnabled: true
-                        cursorShape: Qt.PointingHandCursor
-                        onClicked: {
-                            if (typeof sddm !== "undefined") sddm.reboot()
-                        }
-                    }
-                }
-
-                // Vertical Divider 2
-                Rectangle {
-                    width: 1 * s
-                    height: 16 * s
-                    color: Qt.rgba(56/255, 189/255, 248/255, 0.22)
-                    anchors.verticalCenter: parent.verticalCenter
-                }
-
-                // Classic Shutdown Action
-                Item {
-                    id: classicPowerBtn
-                    width: classicPowerRow.width + 16 * s
-                    height: 28 * s
-                    anchors.verticalCenter: parent.verticalCenter
-
-                    Rectangle {
-                        anchors.fill: parent
-                        radius: 14 * s
-                        color: classicPowerMa.containsMouse
-                               ? Qt.rgba(244/255, 63/255, 94/255, 0.18)
-                               : "transparent"
-                        border.color: classicPowerMa.containsMouse
-                                      ? Qt.rgba(244/255, 63/255, 94/255, 0.50)
-                                      : "transparent"
-                        border.width: 1 * s
-
-                        Behavior on color { ColorAnimation { duration: 150 } }
-                        Behavior on border.color { ColorAnimation { duration: 150 } }
-
-                        Row {
-                            id: classicPowerRow
-                            anchors.centerIn: parent
-                            spacing: 6 * s
-
-                            Text {
-                                text: "⏻"
-                                font.family: root.boldFont
-                                font.pixelSize: 12 * s
-                                font.weight: Font.Bold
-                                color: classicPowerMa.containsMouse ? "#f43f5e" : root.subTextColor
-                                scale: classicPowerMa.containsMouse ? 1.12 : 1.0
-                                anchors.verticalCenter: parent.verticalCenter
-                                renderType: Text.NativeRendering
-
-                                Behavior on scale { NumberAnimation { duration: 150 } }
-                            }
-
-                            Text {
-                                text: "SHUTDOWN"
-                                font.family: root.boldFont
-                                font.pixelSize: 10 * s
-                                font.letterSpacing: 1.8 * s
-                                font.weight: Font.Bold
-                                color: classicPowerMa.containsMouse ? "#f43f5e" : root.subTextColor
-                                anchors.verticalCenter: parent.verticalCenter
-                                renderType: Text.NativeRendering
-                            }
-                        }
-                    }
-
-                    MouseArea {
-                        id: classicPowerMa
-                        anchors.fill: parent
-                        hoverEnabled: true
-                        cursorShape: Qt.PointingHandCursor
-                        onClicked: {
-                            if (typeof sddm !== "undefined") sddm.powerOff()
-                        }
+            // Session Selector
+            CwAction {
+                id: sessionBtnClassic
+                label: root.currentSessionDisplayName + (root.sessionMenuOpen ? " ▲" : " ▼")
+                isActive: root.sessionMenuOpen
+                onClicked: {
+                    if (typeof sessionModel !== "undefined" && sessionModel.rowCount() > 1) {
+                        root.sessionMenuOpen = !root.sessionMenuOpen
+                        root.userMenuOpen = false
+                    } else if (typeof sessionModel !== "undefined" && sessionModel.rowCount() > 0) {
+                        root.sessionIndex = (root.sessionIndex + 1) % sessionModel.rowCount()
                     }
                 }
             }
@@ -3744,7 +3353,7 @@ Rectangle {
         NumberAnimation { target: root; property: "shakeOffset"; to: 0; duration: 40; easing.type: Easing.OutQuad }
     }
 
-    // Minimal Top Action Button Component (Themed glass capsule pill)
+    // Minimal/Classic Top Action Button Component (iOS Liquid Glass Capsule Pill)
     component CwAction: Item {
         id: actItem
         width: actBg.width
@@ -3752,6 +3361,17 @@ Rectangle {
         property string label: ""
         property bool isActive: false
         signal clicked()
+
+        // Ambient Liquid Aura
+        Rectangle {
+            anchors.centerIn: actBg
+            width: actBg.width + 6 * s
+            height: actBg.height + 6 * s
+            radius: actBg.radius + 3 * s
+            color: Qt.rgba(root.accentColor.r, root.accentColor.g, root.accentColor.b, 0.12)
+            visible: actM.containsMouse || actItem.isActive
+            z: -1
+        }
 
         Rectangle {
             id: actBg
@@ -3770,6 +3390,37 @@ Rectangle {
 
             Behavior on color { ColorAnimation { duration: 150 } }
             Behavior on border.color { ColorAnimation { duration: 150 } }
+
+            // iOS Liquid Glass Specular Sheen
+            Rectangle {
+                anchors.top: parent.top
+                anchors.topMargin: 1 * s
+                anchors.left: parent.left
+                anchors.leftMargin: 1 * s
+                anchors.right: parent.right
+                anchors.rightMargin: 1 * s
+                height: parent.height * 0.48
+                radius: parent.radius - 1 * s
+                clip: true
+                gradient: Gradient {
+                    orientation: Gradient.Vertical
+                    GradientStop { position: 0.0; color: Qt.rgba(255, 255, 255, actM.containsMouse ? 0.25 : 0.16) }
+                    GradientStop { position: 0.45; color: Qt.rgba(255, 255, 255, 0.05) }
+                    GradientStop { position: 1.0; color: "transparent" }
+                }
+            }
+
+            // Inner Refraction Bevel Rim
+            Rectangle {
+                anchors.fill: parent
+                anchors.margins: 1 * s
+                radius: parent.radius - 1 * s
+                color: "transparent"
+                border.color: actM.containsMouse
+                              ? Qt.rgba(root.accentColor.r, root.accentColor.g, root.accentColor.b, 0.35)
+                              : Qt.rgba(255, 255, 255, 0.10)
+                border.width: 1 * s
+            }
 
             Text {
                 id: actTxt
