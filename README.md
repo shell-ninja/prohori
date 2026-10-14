@@ -132,12 +132,14 @@ To test and interact with the theme in a preview window without logging out or r
 
 ## Handcrafted Theme Presets
 
-Prohori comes bundled with 2 curated theme presets in `themes/`:
+Prohori comes bundled with 3 curated theme presets in `themes/`:
 
 | Preset Key | Theme Name | Accent | Mood & Aesthetic |
 | :--- | :--- | :--- | :--- |
-| `minimal` | **Prohori Minimal** | `#00f5a0` | Architectural monolithic digital clock, kinetic seconds sweep, floating auth dock & deep emerald mint ambient aura (`backgrounds/minimal.jpg`) |
+| `minimal` | **Prohori Minimal** | `#00f5a0` | Architectural monolithic digital clock, kinetic seconds sweep, floating auth dock & falling green dust motes (`backgrounds/minimal.jpg`) |
+| `astral` | **Prohori Astral** | `#b026ff` | Monumental centered chronometer, horizontal horizon cyber-deck & rising violet mist plumes (`backgrounds/astral.jpg`) |
 | `default` | **Prohori Classic** | `#38bdf8` | Iconic orbital concentric chronometer dials on deep obsidian navy (`backgrounds/default.jpg`) |
+
 
 ---
 

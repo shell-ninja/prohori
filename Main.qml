@@ -41,13 +41,26 @@ Rectangle {
     readonly property bool enableVirtualKeyboard: (typeof config !== "undefined" && config.enableVirtualKeyboard !== undefined) ? (config.enableVirtualKeyboard === "true" || config.enableVirtualKeyboard === true) : false
 
     function focusActiveInput() {
-        if (root.isModernLayout) {
+        if (root.isAstralLayout) {
+            if (typeof astralPassInput !== "undefined" && astralPassInput) astralPassInput.forceActiveFocus()
+        } else if (root.isMinimalLayout) {
             if (typeof minPassInput !== "undefined" && minPassInput) minPassInput.forceActiveFocus()
         } else {
             if (typeof passInput !== "undefined" && passInput) passInput.forceActiveFocus()
         }
         if (!root.enableVirtualKeyboard) Qt.inputMethod.hide()
     }
+
+    function getActivePassword() {
+        if (root.isAstralLayout) {
+            return (typeof astralPassInput !== "undefined" && astralPassInput) ? astralPassInput.text : ""
+        } else if (root.isMinimalLayout) {
+            return (typeof minPassInput !== "undefined" && minPassInput) ? minPassInput.text : ""
+        } else {
+            return (typeof passInput !== "undefined" && passInput) ? passInput.text : ""
+        }
+    }
+
 
     // Clean, authentic minimal color palette (no artificial sparkles/flares)
     property bool isErrorState: false
@@ -71,7 +84,8 @@ Rectangle {
     readonly property real backgroundDim: (typeof config !== "undefined" && config.backgroundDim !== undefined) ? Number(config.backgroundDim) : 0.0
     readonly property bool showOrbitTracks: typeof config === "undefined" || (config.showOrbitTracks !== "false" && config.showOrbitTracks !== false)
     readonly property bool enableDustParticles: (typeof config !== "undefined" && config.enableDustParticles !== undefined) ? (config.enableDustParticles === "true" || config.enableDustParticles === true) : root.isMinimalLayout
-    readonly property bool enableConstellationMesh: (typeof config !== "undefined" && config.enableConstellationMesh !== undefined) ? (config.enableConstellationMesh === "true" || config.enableConstellationMesh === true) : root.isAstralLayout
+    readonly property bool enableSmokeEffect: (typeof config !== "undefined" && config.enableSmokeEffect !== undefined) ? (config.enableSmokeEffect === "true" || config.enableSmokeEffect === true) : root.isAstralLayout
+
 
 
     readonly property string authSubtitle: (typeof config !== "undefined" && config.authSubtitle) ? config.authSubtitle : "TYPE PASSWORD OR FIDO PIN"
@@ -382,19 +396,19 @@ Rectangle {
         }
     }
 
-    // Ambient Cyber-Celestial Constellation Mesh Layer (Floating amethyst nodes & dynamic interconnecting lines)
+    // Ambient Rising Ethereal Violet Fog & Smoke Simulation (Billowing plumes rising from bottom to top)
     Item {
-        id: constellationLayer
+        id: smokeFogLayer
         anchors.fill: parent
         z: 2
-        visible: root.enableConstellationMesh
+        visible: root.enableSmokeEffect
         opacity: root.uiOpacity
 
         Canvas {
-            id: cvConstellation
+            id: cvSmoke
             anchors.fill: parent
             renderTarget: Canvas.FramebufferObject
-            renderStrategy: Canvas.Cooperative
+            renderStrategy: Canvas.Threaded
 
             property real animTime: 0
 
@@ -403,76 +417,95 @@ Rectangle {
                 to: 3600000
                 duration: 3600000
                 loops: Animation.Infinite
-                running: constellationLayer.visible
+                running: smokeFogLayer.visible
             }
 
-
             onAnimTimeChanged: requestPaint()
+
+            readonly property var plumes: [
+                { xFrac: 0.04, speed: 0.65, rBase: 180, swayAmp: 42, swayFreq: 0.0009, phase: 0.4, alpha: 0.28 },
+                { xFrac: 0.12, speed: 0.88, rBase: 240, swayAmp: 52, swayFreq: 0.0007, phase: 1.8, alpha: 0.34 },
+                { xFrac: 0.20, speed: 0.70, rBase: 200, swayAmp: 36, swayFreq: 0.0011, phase: 3.1, alpha: 0.26 },
+                { xFrac: 0.28, speed: 0.82, rBase: 260, swayAmp: 58, swayFreq: 0.0006, phase: 0.9, alpha: 0.35 },
+                { xFrac: 0.36, speed: 0.68, rBase: 220, swayAmp: 44, swayFreq: 0.0010, phase: 4.5, alpha: 0.30 },
+                { xFrac: 0.45, speed: 0.95, rBase: 290, swayAmp: 64, swayFreq: 0.0008, phase: 2.3, alpha: 0.38 },
+                { xFrac: 0.54, speed: 0.75, rBase: 230, swayAmp: 48, swayFreq: 0.0012, phase: 5.7, alpha: 0.32 },
+                { xFrac: 0.62, speed: 0.88, rBase: 270, swayAmp: 54, swayFreq: 0.0007, phase: 1.2, alpha: 0.36 },
+                { xFrac: 0.71, speed: 0.66, rBase: 210, swayAmp: 38, swayFreq: 0.0013, phase: 3.8, alpha: 0.27 },
+                { xFrac: 0.79, speed: 0.85, rBase: 250, swayAmp: 56, swayFreq: 0.0009, phase: 2.7, alpha: 0.33 },
+                { xFrac: 0.88, speed: 0.72, rBase: 220, swayAmp: 42, swayFreq: 0.0011, phase: 4.9, alpha: 0.29 },
+                { xFrac: 0.96, speed: 0.80, rBase: 190, swayAmp: 36, swayFreq: 0.0008, phase: 1.5, alpha: 0.26 },
+                { xFrac: 0.30, speed: 0.55, rBase: 320, swayAmp: 70, swayFreq: 0.0005, phase: 6.1, alpha: 0.34 },
+                { xFrac: 0.50, speed: 0.60, rBase: 340, swayAmp: 75, swayFreq: 0.0006, phase: 3.4, alpha: 0.36 },
+                { xFrac: 0.70, speed: 0.58, rBase: 310, swayAmp: 68, swayFreq: 0.0005, phase: 5.1, alpha: 0.32 },
+                { xFrac: 0.16, speed: 0.62, rBase: 280, swayAmp: 60, swayFreq: 0.0007, phase: 0.7, alpha: 0.30 }
+            ]
 
             onPaint: {
                 var ctx = getContext('2d');
                 ctx.clearRect(0, 0, width, height);
 
-                var t = animTime * 0.0006;
-                var pts = [];
-                var count = 28;
-                var col = root.accentColor;
+                var t = animTime;
+                var w = width;
+                var h = height;
 
-                for (var i = 0; i < count; i++) {
-                    var x0 = (i / count) * width + 30 * root.s;
-                    var y0 = (((i * 43 + 23) % 100) / 100.0) * height;
-                    var fx = 0.45 + (i % 6) * 0.12;
-                    var fy = 0.38 + (i % 8) * 0.11;
-                    var ax = (48 + (i % 5) * 16) * root.s;
-                    var ay = (42 + (i % 4) * 16) * root.s;
+                // 1. Triple Undulating Ground Fog Mist Banks across the bottom
+                var wave1 = Math.sin(t * 0.0012) * 28;
+                var groundH1 = 340 + wave1;
+                var groundGrad1 = ctx.createLinearGradient(0, h - groundH1, 0, h);
+                groundGrad1.addColorStop(0.0, "rgba(176, 38, 255, 0.0)");
+                groundGrad1.addColorStop(0.35, "rgba(139, 92, 246, 0.18)");
+                groundGrad1.addColorStop(1.0, "rgba(59, 7, 100, 0.42)");
+                ctx.fillStyle = groundGrad1;
+                ctx.fillRect(0, h - groundH1, w, groundH1);
 
-                    var px = x0 + Math.sin(t * fx + i * 1.2) * ax;
-                    var py = y0 + Math.cos(t * fy + i * 1.7) * ay;
-                    var pr = (1.5 + (i % 3) * 0.9) * root.s;
-                    var isHub = (i % 7 === 0);
+                var wave2 = Math.cos(t * 0.0009) * 32;
+                var groundH2 = 230 + wave2;
+                var groundGrad2 = ctx.createLinearGradient(0, h - groundH2, 0, h);
+                groundGrad2.addColorStop(0.0, "rgba(124, 58, 237, 0.0)");
+                groundGrad2.addColorStop(0.45, "rgba(176, 38, 255, 0.18)");
+                groundGrad2.addColorStop(1.0, "rgba(35, 4, 62, 0.52)");
+                ctx.fillStyle = groundGrad2;
+                ctx.fillRect(0, h - groundH2, w, groundH2);
 
-                    pts.push({ x: px, y: py, r: pr, isHub: isHub });
-                }
+                var wave3 = Math.sin(t * 0.0007 + 1.2) * 24;
+                var groundH3 = 140 + wave3;
+                var groundGrad3 = ctx.createLinearGradient(0, h - groundH3, 0, h);
+                groundGrad3.addColorStop(0.0, "rgba(192, 60, 255, 0.0)");
+                groundGrad3.addColorStop(0.50, "rgba(168, 85, 247, 0.22)");
+                groundGrad3.addColorStop(1.0, "rgba(24, 2, 45, 0.65)");
+                ctx.fillStyle = groundGrad3;
+                ctx.fillRect(0, h - groundH3, w, groundH3);
 
-                var maxD = 185 * root.s;
-                var maxD2 = maxD * maxD;
+                // 2. Rising Volumetric Smoke Plumes drifting upward
+                for (var i = 0; i < plumes.length; i++) {
+                    var p = plumes[i];
+                    var loopH = h + p.rBase * 2.8;
+                    var rawDist = ((t * 0.055 * p.speed + (p.phase * 340)) % loopH);
+                    var py = h + p.rBase - rawDist;
+                    var progress = Math.max(0.0, Math.min(1.0, 1.0 - (py / h)));
 
-                // Draw dynamic connection lines between proximate nodes
-                for (var a = 0; a < count; a++) {
-                    for (var b = a + 1; b < count; b++) {
-                        var dx = pts[a].x - pts[b].x;
-                        var dy = pts[a].y - pts[b].y;
-                        var d2 = dx * dx + dy * dy;
-                        if (d2 < maxD2) {
-                            var dist = Math.sqrt(d2);
-                            var lineAlpha = (1.0 - dist / maxD) * 0.32;
-                            ctx.beginPath();
-                            ctx.moveTo(pts[a].x, pts[a].y);
-                            ctx.lineTo(pts[b].x, pts[b].y);
-                            ctx.strokeStyle = Qt.rgba(col.r, col.g, col.b, lineAlpha);
-                            ctx.lineWidth = 1 * root.s;
-                            ctx.stroke();
-                        }
-                    }
-                }
+                    var px = (p.xFrac * w) + Math.sin(t * p.swayFreq + p.phase) * p.swayAmp;
+                    var curR = p.rBase * (1.0 + progress * 1.45);
+                    var curAlpha = p.alpha * Math.pow(Math.max(0.0, 1.0 - (progress * 0.78)), 1.15);
 
-                // Draw luminous amethyst nodes and nexus halos
-                for (var n = 0; n < count; n++) {
-                    var p = pts[n];
-                    if (p.isHub) {
+                    if (curAlpha > 0.01 && py > -curR && py < h + curR) {
+                        var grad = ctx.createRadialGradient(px, py, 0, px, py, curR);
+                        grad.addColorStop(0.0, "rgba(192, 60, 255, " + (curAlpha * 1.35).toFixed(3) + ")");
+                        grad.addColorStop(0.35, "rgba(139, 92, 246, " + (curAlpha * 0.88).toFixed(3) + ")");
+                        grad.addColorStop(0.70, "rgba(76, 29, 149, " + (curAlpha * 0.35).toFixed(3) + ")");
+                        grad.addColorStop(1.0, "rgba(0, 0, 0, 0)");
+
+                        ctx.fillStyle = grad;
                         ctx.beginPath();
-                        ctx.arc(p.x, p.y, p.r * 2.8, 0, 2 * Math.PI);
-                        ctx.fillStyle = Qt.rgba(col.r, col.g, col.b, 0.12);
+                        ctx.arc(px, py, curR, 0, Math.PI * 2);
                         ctx.fill();
                     }
-                    ctx.beginPath();
-                    ctx.arc(p.x, p.y, p.r, 0, 2 * Math.PI);
-                    ctx.fillStyle = Qt.rgba(col.r, col.g, col.b, 0.75);
-                    ctx.fill();
                 }
             }
         }
     }
+
 
     // Error Alert Vignette Overlay (Red pulse on authentication failure)
     Rectangle {
@@ -787,7 +820,7 @@ Rectangle {
         Row {
             id: hudRow
             anchors.right: parent.right
-            anchors.rightMargin: root.isModernLayout ? 130 * s : root.marginR
+            anchors.rightMargin: root.isAstralLayout ? 70 * s : (root.isMinimalLayout ? 130 * s : root.marginR)
             anchors.top: parent.top
             anchors.topMargin: 46 * s
             spacing: 12 * s
@@ -831,7 +864,7 @@ Rectangle {
             anchors.top: parent.top
             anchors.topMargin: 88 * s
             anchors.right: parent.right
-            anchors.rightMargin: root.isModernLayout ? 130 * s : root.marginR
+            anchors.rightMargin: root.isAstralLayout ? 70 * s : (root.isMinimalLayout ? 130 * s : root.marginR)
             width: 250 * s
             height: root.sessionMenuOpen ? Math.min(300 * s, ((typeof sessionModel !== "undefined" ? sessionModel.rowCount() : 1) * 44 * s) + 20 * s) : 0
             clip: true
@@ -915,11 +948,12 @@ Rectangle {
         Rectangle {
             id: uMenuContainer
             z: 6000
-            anchors.right: parent.right
-            anchors.rightMargin: root.isModernLayout ? 130 * s : root.marginR
+            anchors.horizontalCenter: root.isAstralLayout ? parent.horizontalCenter : undefined
+            anchors.right: root.isAstralLayout ? undefined : parent.right
+            anchors.rightMargin: root.isAstralLayout ? 0 : (root.isMinimalLayout ? 130 * s : root.marginR)
             anchors.bottom: parent.bottom
-            anchors.bottomMargin: root.isModernLayout ? (parent.height * 0.5 + 155 * s) : 240 * s
-            width: root.isModernLayout ? 430 * s : 280 * s
+            anchors.bottomMargin: root.isAstralLayout ? (parent.height * 0.15 + 84 * s) : (root.isMinimalLayout ? (parent.height * 0.5 + 155 * s) : 240 * s)
+            width: root.isAstralLayout ? 360 * s : (root.isMinimalLayout ? 430 * s : 280 * s)
             height: root.userMenuOpen ? Math.min(320 * s, ((typeof userModel !== "undefined" ? userModel.rowCount() : 1) * 52 * s) + 40 * s) : 0
             clip: true
             radius: 16 * s
@@ -1253,11 +1287,11 @@ Rectangle {
         }
 
         // =====================================================================
-        // Brand-New Modern Architecture Layout (Minimal & Astral Presets)
+        // Prohori Minimal Layout (Architectural Monolithic Digital Clock & Floating Auth Card)
         // =====================================================================
         Item {
             id: minimalContainer
-            visible: root.isModernLayout
+            visible: root.isMinimalLayout
             anchors.fill: parent
 
             // 1. Viewfinder Crosshairs & Modern Architectural Frame Guides
@@ -1280,7 +1314,7 @@ Rectangle {
                     }
 
                     Text {
-                        text: root.isAstralLayout ? "PROHORI // ASTRAL SENTINEL" : "PROHORI // SENTINEL CORE"
+                        text: "PROHORI // SENTINEL CORE"
                         font.family: root.boldFont
                         font.pixelSize: 11 * s
                         font.letterSpacing: 3 * s
@@ -1315,8 +1349,8 @@ Rectangle {
                         text: root.isErrorState
                               ? "STATUS: SECURITY ALERT // ACCESS REJECTED"
                               : (root.isLoggingIn
-                                 ? (root.isAstralLayout ? "STATUS: ASTRAL LINK // VERIFYING QUANTUM KEY" : "STATUS: AUTHENTICATING // VERIFYING CREDENTIALS")
-                                 : (root.isAstralLayout ? "STATUS: ASTRAL SYNCHRONIZED // SYSTEM READY" : "STATUS: ENCRYPTED // SYSTEM READY"))
+                                 ? "STATUS: AUTHENTICATING // VERIFYING CREDENTIALS"
+                                 : "STATUS: ENCRYPTED // SYSTEM READY")
                         font.family: root.boldFont
                         font.pixelSize: 11 * s
                         font.letterSpacing: 2 * s
@@ -1341,7 +1375,7 @@ Rectangle {
                 }
             }
 
-            // 2a. Minimal Hero Section: Monolithic Typographic Clock & Kinetic Sweep
+            // 2. Minimal Hero Section: Monolithic Typographic Clock & Kinetic Sweep
             Item {
                 id: minHeroClock
                 visible: root.isMinimalLayout
@@ -1550,229 +1584,6 @@ Rectangle {
                 }
             }
 
-            // 2b. Astral Hero Section: Stacked Giant Architectural Typography & Cybernetic Telemetry
-            Item {
-                id: astralHeroClock
-                visible: root.isAstralLayout
-                anchors.left: parent.left
-                anchors.leftMargin: 120 * s
-                anchors.verticalCenter: parent.verticalCenter
-                width: 680 * s
-                height: 460 * s
-
-                readonly property real secFrac: (root.curS * 1000 + root.curMS) / 60000.0
-
-                Column {
-                    anchors.fill: parent
-                    spacing: 12 * s
-
-                    // 1. Top Cybernetic Telemetry Header
-                    Row {
-                        spacing: 10 * s
-
-                        // Glowing Astral Node Badge
-                        Rectangle {
-                            height: 24 * s
-                            width: astralNodeTxt.width + 20 * s
-                            radius: 6 * s
-                            color: Qt.rgba(root.accentColor.r, root.accentColor.g, root.accentColor.b, 0.12)
-                            border.color: Qt.rgba(root.accentColor.r, root.accentColor.g, root.accentColor.b, 0.40)
-                            border.width: 1 * s
-
-                            Row {
-                                anchors.centerIn: parent
-                                spacing: 6 * s
-                                Rectangle {
-                                    width: 6 * s
-                                    height: 6 * s
-                                    radius: 3 * s
-                                    color: root.accentColor
-                                    anchors.verticalCenter: parent.verticalCenter
-                                    SequentialAnimation on opacity {
-                                        loops: Animation.Infinite
-                                        NumberAnimation { from: 1.0; to: 0.3; duration: 900; easing.type: Easing.InOutQuad }
-                                        NumberAnimation { from: 0.3; to: 1.0; duration: 900; easing.type: Easing.InOutQuad }
-                                    }
-                                }
-                                Text {
-                                    id: astralNodeTxt
-                                    text: "ASTRAL // PROTOCOL 07"
-                                    font.family: root.boldFont
-                                    font.pixelSize: 10 * s
-                                    font.letterSpacing: 2.5 * s
-                                    font.weight: Font.Bold
-                                    color: root.accentColor
-                                    renderType: Text.NativeRendering
-                                }
-                            }
-                        }
-
-                        // Auxiliary Status Badge
-                        Rectangle {
-                            height: 24 * s
-                            width: astralAuxTxt.width + 18 * s
-                            radius: 6 * s
-                            color: Qt.rgba(255, 255, 255, 0.04)
-                            border.color: Qt.rgba(255, 255, 255, 0.08)
-                            border.width: 1 * s
-
-                            Text {
-                                id: astralAuxTxt
-                                anchors.centerIn: parent
-                                text: "ORBITAL FLUX: STABLE // " + (root.hourFormat === "12" ? (root.curH >= 12 ? "PM" : "AM") : "24H")
-                                font.family: root.semiBoldFont
-                                font.pixelSize: 10 * s
-                                font.letterSpacing: 2 * s
-                                font.weight: Font.DemiBold
-                                color: root.subTextColor
-                                renderType: Text.NativeRendering
-                            }
-                        }
-                    }
-
-                    // 2. Middle Row: Stacked Giant Architectural Numbers + Vertical Timeline Gauge
-                    Row {
-                        spacing: 24 * s
-
-                        // Vertical Left Accent Rail
-                        Rectangle {
-                            width: 3 * s
-                            height: 240 * s
-                            radius: 1.5 * s
-                            color: Qt.rgba(255, 255, 255, 0.08)
-                            anchors.verticalCenter: parent.verticalCenter
-
-                            // Moving luminous pulse bead indicating second fraction
-                            Rectangle {
-                                anchors.horizontalCenter: parent.horizontalCenter
-                                y: Math.max(0, Math.min(parent.height - height, parent.height * astralHeroClock.secFrac))
-                                width: 7 * s
-                                height: 18 * s
-                                radius: 3.5 * s
-                                color: root.accentColor
-                            }
-                        }
-
-                        // Stacked Hours & Minutes (Monumental Architectural Typography)
-                        Column {
-                            spacing: -18 * s
-                            anchors.verticalCenter: parent.verticalCenter
-
-                            // Hours (Bright pearl/white)
-                            Text {
-                                text: String(root.displayHour).padStart(2, '0')
-                                font.family: root.boldFont
-                                font.pixelSize: 128 * s
-                                font.letterSpacing: -2 * s
-                                font.weight: Font.Black
-                                color: root.mainTextColor
-                                renderType: Text.NativeRendering
-                            }
-
-                            // Minutes (Vibrant Neon Violet)
-                            Text {
-                                text: String(root.curM).padStart(2, '0')
-                                font.family: root.boldFont
-                                font.pixelSize: 128 * s
-                                font.letterSpacing: -2 * s
-                                font.weight: Font.Black
-                                color: root.accentColor
-                                renderType: Text.NativeRendering
-                            }
-                        }
-
-                        // Right-Hand Telemetry Gauge Column
-                        Column {
-                            anchors.verticalCenter: parent.verticalCenter
-                            spacing: 14 * s
-                            width: 220 * s
-
-                            // Seconds Pill & Counter
-                            Rectangle {
-                                width: parent.width
-                                height: 46 * s
-                                radius: 10 * s
-                                color: Qt.rgba(root.accentColor.r, root.accentColor.g, root.accentColor.b, 0.08)
-                                border.color: Qt.rgba(root.accentColor.r, root.accentColor.g, root.accentColor.b, 0.35)
-                                border.width: 1.5 * s
-
-                                Row {
-                                    anchors.centerIn: parent
-                                    spacing: 8 * s
-
-                                    Text {
-                                        text: "SEC"
-                                        font.family: root.boldFont
-                                        font.pixelSize: 11 * s
-                                        font.letterSpacing: 2 * s
-                                        font.weight: Font.Bold
-                                        color: root.subTextColor
-                                        anchors.verticalCenter: parent.verticalCenter
-                                    }
-
-                                    Text {
-                                        text: String(root.curS).padStart(2, '0')
-                                        font.family: root.boldFont
-                                        font.pixelSize: 20 * s
-                                        font.weight: Font.Black
-                                        color: root.accentColor
-                                        anchors.verticalCenter: parent.verticalCenter
-                                    }
-
-                                    Text {
-                                        text: "// 60"
-                                        font.family: root.semiBoldFont
-                                        font.pixelSize: 11 * s
-                                        font.weight: Font.Bold
-                                        color: root.dimTextColor
-                                        anchors.verticalCenter: parent.verticalCenter
-                                    }
-                                }
-                            }
-
-                            // Micro Progress Bar for Seconds
-                            Rectangle {
-                                width: parent.width
-                                height: 4 * s
-                                radius: 2 * s
-                                color: Qt.rgba(255, 255, 255, 0.08)
-
-                                Rectangle {
-                                    anchors.left: parent.left
-                                    anchors.top: parent.top
-                                    anchors.bottom: parent.bottom
-                                    width: Math.max(4 * s, parent.width * (root.curS / 60.0))
-                                    radius: 2 * s
-                                    color: root.accentColor
-                                }
-                            }
-
-                            // Day Badge
-                            Text {
-                                text: Qt.formatDate(new Date(), "dddd").toUpperCase()
-                                font.family: root.boldFont
-                                font.pixelSize: 18 * s
-                                font.letterSpacing: 4 * s
-                                font.weight: Font.Black
-                                color: root.mainTextColor
-                                renderType: Text.NativeRendering
-                            }
-
-                            // Full Cosmic Date
-                            Text {
-                                text: Qt.formatDate(new Date(), "dd MMMM yyyy").toUpperCase()
-                                font.family: root.semiBoldFont
-                                font.pixelSize: 12 * s
-                                font.letterSpacing: 3 * s
-                                font.weight: Font.DemiBold
-                                color: root.subTextColor
-                                renderType: Text.NativeRendering
-                            }
-                        }
-                    }
-                }
-            }
-
             // 3. Center-Right Floating Authentication Monolith Dock
             Rectangle {
                 id: minAuthCard
@@ -1850,7 +1661,7 @@ Rectangle {
                                 }
 
                                 Text {
-                                    text: root.isAstralLayout ? "ASTRAL OPERATOR // QUANTUM LINK" : "ACTIVE OPERATOR // STANDBY"
+                                    text: "ACTIVE OPERATOR // STANDBY"
                                     font.family: root.semiBoldFont
                                     font.pixelSize: 10 * s
                                     font.letterSpacing: 2 * s
@@ -1943,7 +1754,7 @@ Rectangle {
                             font.family: root.boldFont
                             font.pixelSize: 18 * s
                             font.letterSpacing: 5 * s
-                            focus: root.isModernLayout
+                            focus: root.isMinimalLayout
                             activeFocusOnPress: false
                             cursorVisible: true
                             enabled: !root.isLoggingIn
@@ -2050,6 +1861,672 @@ Rectangle {
                             NumberAnimation { to: 1.0; duration: 320; easing.type: Easing.InOutSine }
                         }
                     }
+                }
+            }
+        }
+
+        // =====================================================================
+        // Prohori Astral Layout: Centered Horizon Architecture
+        // (Monumental Centered Chronometer, Horizontal Horizon Cyber-Deck & Rising Violet Smoke)
+        // =====================================================================
+        Item {
+            id: astralContainer
+            visible: root.isAstralLayout
+            anchors.fill: parent
+
+            // 1. Astral Viewfinder Brackets & Cybernetic Horizon Guidelines
+            Item {
+                id: astralFrameGuides
+                anchors.fill: parent
+                opacity: 0.40
+
+                // Top Left Viewfinder Bracket & System Code
+                Row {
+                    x: 70 * s
+                    y: 50 * s
+                    spacing: 12 * s
+
+                    Text {
+                        text: "┌"
+                        font.family: root.boldFont
+                        font.pixelSize: 18 * s
+                        color: root.accentColor
+                    }
+
+                    Text {
+                        text: "PROHORI // ASTRAL SENTINEL"
+                        font.family: root.boldFont
+                        font.pixelSize: 11 * s
+                        font.letterSpacing: 3.5 * s
+                        font.weight: Font.Bold
+                        color: root.dimTextColor
+                        anchors.verticalCenter: parent.verticalCenter
+                    }
+                }
+
+                // Bottom Left Telemetry Status
+                Row {
+                    x: 70 * s
+                    anchors.bottom: parent.bottom
+                    anchors.bottomMargin: 45 * s
+                    spacing: 10 * s
+
+                    Rectangle {
+                        width: 7 * s
+                        height: 7 * s
+                        radius: 3.5 * s
+                        color: root.accentColor
+                        anchors.verticalCenter: parent.verticalCenter
+
+                        SequentialAnimation on opacity {
+                            loops: Animation.Infinite
+                            NumberAnimation { from: 1.0; to: 0.25; duration: 1100; easing.type: Easing.InOutQuad }
+                            NumberAnimation { from: 0.25; to: 1.0; duration: 1100; easing.type: Easing.InOutQuad }
+                        }
+                    }
+
+                    Text {
+                        text: root.isErrorState
+                              ? "ASTRAL REJECTED // ACCESS DENIED"
+                              : (root.isLoggingIn
+                                 ? "ASTRAL LINK // VERIFYING QUANTUM KEY"
+                                 : "ASTRAL LINK // SECURE QUANTUM NODE")
+                        font.family: root.boldFont
+                        font.pixelSize: 11 * s
+                        font.letterSpacing: 2 * s
+                        font.weight: Font.Bold
+                        color: root.isErrorState ? root.errorColor : (root.isLoggingIn ? root.accentColor : root.dimTextColor)
+                        anchors.verticalCenter: parent.verticalCenter
+
+                        Behavior on color { ColorAnimation { duration: 200 } }
+                    }
+                }
+
+                // Subtle Horizon Axis Rule Line spanning across bottom
+                Rectangle {
+                    anchors.left: parent.left
+                    anchors.leftMargin: 70 * s
+                    anchors.right: parent.right
+                    anchors.rightMargin: 70 * s
+                    anchors.bottom: parent.bottom
+                    anchors.bottomMargin: 75 * s
+                    height: 1 * s
+                    color: Qt.rgba(1, 1, 1, 0.05)
+                }
+            }
+
+            // 2. Monumental Centered Architectural Chronometer
+            Item {
+                id: astralCenterClock
+                anchors.horizontalCenter: parent.horizontalCenter
+                anchors.top: parent.top
+                anchors.topMargin: parent.height * 0.17
+                width: 700 * s
+                height: 340 * s
+
+                readonly property real secFrac: (root.curS * 1000 + root.curMS) / 60000.0
+
+                Column {
+                    anchors.fill: parent
+                    spacing: 14 * s
+
+                    // Telemetry Header Pill
+                    Item {
+                        width: parent.width
+                        height: 28 * s
+
+                        Rectangle {
+                            anchors.horizontalCenter: parent.horizontalCenter
+                            height: 26 * s
+                            width: astralTopTxt.width + 28 * s
+                            radius: 13 * s
+                            color: Qt.rgba(root.accentColor.r, root.accentColor.g, root.accentColor.b, 0.10)
+                            border.color: Qt.rgba(root.accentColor.r, root.accentColor.g, root.accentColor.b, 0.35)
+                            border.width: 1 * s
+
+                            Row {
+                                anchors.centerIn: parent
+                                spacing: 8 * s
+
+                                Rectangle {
+                                    width: 5 * s
+                                    height: 5 * s
+                                    radius: 2.5 * s
+                                    color: root.accentColor
+                                    anchors.verticalCenter: parent.verticalCenter
+                                    SequentialAnimation on opacity {
+                                        loops: Animation.Infinite
+                                        NumberAnimation { from: 1.0; to: 0.3; duration: 900; easing.type: Easing.InOutQuad }
+                                        NumberAnimation { from: 0.3; to: 1.0; duration: 900; easing.type: Easing.InOutQuad }
+                                    }
+                                }
+
+                                Text {
+                                    id: astralTopTxt
+                                    text: "ASTRAL SENTINEL // ORBITAL FLUX STABLE"
+                                    font.family: root.boldFont
+                                    font.pixelSize: 10 * s
+                                    font.letterSpacing: 3 * s
+                                    font.weight: Font.Bold
+                                    color: root.accentColor
+                                    renderType: Text.NativeRendering
+                                }
+
+                                Rectangle {
+                                    width: 5 * s
+                                    height: 5 * s
+                                    radius: 2.5 * s
+                                    color: root.accentColor
+                                    anchors.verticalCenter: parent.verticalCenter
+                                    SequentialAnimation on opacity {
+                                        loops: Animation.Infinite
+                                        NumberAnimation { from: 0.3; to: 1.0; duration: 900; easing.type: Easing.InOutQuad }
+                                        NumberAnimation { from: 1.0; to: 0.3; duration: 900; easing.type: Easing.InOutQuad }
+                                    }
+                                }
+                            }
+                        }
+                    }
+
+                    // Monumental Centered Digital Time Display
+                    Row {
+                        anchors.horizontalCenter: parent.horizontalCenter
+                        spacing: 16 * s
+
+                        // Hours
+                        Text {
+                            text: String(root.displayHour).padStart(2, '0')
+                            font.family: root.boldFont
+                            font.pixelSize: 136 * s
+                            font.letterSpacing: -2 * s
+                            font.weight: Font.Black
+                            color: root.mainTextColor
+                            renderType: Text.NativeRendering
+                        }
+
+                        // Glowing Breathing Dual Diamond Colon Separator
+                        Column {
+                            anchors.verticalCenter: parent.verticalCenter
+                            spacing: 22 * s
+                            opacity: (root.curMS < 500) ? 1.0 : 0.25
+
+                            Behavior on opacity { NumberAnimation { duration: 180 } }
+
+                            Rectangle {
+                                width: 12 * s
+                                height: 12 * s
+                                rotation: 45
+                                color: root.accentColor
+                            }
+
+                            Rectangle {
+                                width: 12 * s
+                                height: 12 * s
+                                rotation: 45
+                                color: root.accentColor
+                            }
+                        }
+
+                        // Minutes
+                        Text {
+                            text: String(root.curM).padStart(2, '0')
+                            font.family: root.boldFont
+                            font.pixelSize: 136 * s
+                            font.letterSpacing: -2 * s
+                            font.weight: Font.Black
+                            color: root.accentColor
+                            renderType: Text.NativeRendering
+                        }
+
+                        // 12H Period Pill (AM / PM)
+                        Rectangle {
+                            visible: root.hourFormat === "12"
+                            anchors.top: parent.top
+                            anchors.topMargin: 26 * s
+                            width: 36 * s
+                            height: 22 * s
+                            radius: 6 * s
+                            color: Qt.rgba(root.accentColor.r, root.accentColor.g, root.accentColor.b, 0.12)
+                            border.color: root.accentColor
+                            border.width: 1 * s
+
+                            Text {
+                                anchors.centerIn: parent
+                                text: root.curH >= 12 ? "PM" : "AM"
+                                font.family: root.boldFont
+                                font.pixelSize: 10 * s
+                                font.weight: Font.Black
+                                font.letterSpacing: 1 * s
+                                color: root.accentColor
+                                renderType: Text.NativeRendering
+                            }
+                        }
+                    }
+
+                    // Horizontal Cyber Seconds Plasma Rail
+                    Item {
+                        anchors.horizontalCenter: parent.horizontalCenter
+                        width: 500 * s
+                        height: 32 * s
+
+                        readonly property real railW: 400 * s
+
+                        // Left 00s Marker
+                        Text {
+                            anchors.right: plasmaRail.left
+                            anchors.rightMargin: 12 * s
+                            anchors.verticalCenter: parent.verticalCenter
+                            text: "00s"
+                            font.family: root.boldFont
+                            font.pixelSize: 10 * s
+                            font.letterSpacing: 1.5 * s
+                            font.weight: Font.Bold
+                            color: Qt.rgba(1, 1, 1, 0.25)
+                            renderType: Text.NativeRendering
+                        }
+
+                        // Central Rail Track
+                        Rectangle {
+                            id: plasmaRail
+                            anchors.centerIn: parent
+                            width: parent.railW
+                            height: 4 * s
+                            radius: 2 * s
+                            color: Qt.rgba(255, 255, 255, 0.08)
+
+                            // Active progress fill
+                            Rectangle {
+                                anchors.left: parent.left
+                                anchors.top: parent.top
+                                anchors.bottom: parent.bottom
+                                width: Math.max(4 * s, parent.width * astralCenterClock.secFrac)
+                                radius: 2 * s
+                                color: root.accentColor
+                            }
+
+                            // Moving Plasma Cursor Head
+                            Item {
+                                x: Math.max(0, Math.min(plasmaRail.width - width, (plasmaRail.width * astralCenterClock.secFrac) - (width * 0.5)))
+                                anchors.verticalCenter: parent.verticalCenter
+                                width: plasmaPill.width
+                                height: 32 * s
+
+                                Rectangle {
+                                    id: plasmaPill
+                                    anchors.horizontalCenter: parent.horizontalCenter
+                                    anchors.bottom: plasmaDot.top
+                                    anchors.bottomMargin: 3 * s
+                                    width: plasmaTxt.width + 12 * s
+                                    height: 18 * s
+                                    radius: 5 * s
+                                    color: Qt.rgba(14/255, 10/255, 26/255, 0.94)
+                                    border.color: root.accentColor
+                                    border.width: 1 * s
+
+                                    Text {
+                                        id: plasmaTxt
+                                        anchors.centerIn: parent
+                                        text: String(root.curS).padStart(2, '0') + "s"
+                                        font.family: root.boldFont
+                                        font.pixelSize: 10 * s
+                                        font.weight: Font.Black
+                                        font.letterSpacing: 1 * s
+                                        color: root.accentColor
+                                        renderType: Text.NativeRendering
+                                    }
+                                }
+
+                                Rectangle {
+                                    id: plasmaDot
+                                    anchors.horizontalCenter: parent.horizontalCenter
+                                    anchors.verticalCenter: parent.verticalCenter
+                                    width: 10 * s
+                                    height: 10 * s
+                                    radius: 5 * s
+                                    color: root.mainTextColor
+                                    border.color: root.accentColor
+                                    border.width: 2 * s
+                                }
+                            }
+                        }
+
+                        // Right 60s Marker
+                        Text {
+                            anchors.left: plasmaRail.right
+                            anchors.leftMargin: 12 * s
+                            anchors.verticalCenter: parent.verticalCenter
+                            text: "60s"
+                            font.family: root.boldFont
+                            font.pixelSize: 10 * s
+                            font.letterSpacing: 1.5 * s
+                            font.weight: Font.Bold
+                            color: Qt.rgba(1, 1, 1, 0.25)
+                            renderType: Text.NativeRendering
+                        }
+                    }
+
+                    // Celestial Date & Calendar Row
+                    Row {
+                        anchors.horizontalCenter: parent.horizontalCenter
+                        spacing: 12 * s
+
+                        Text {
+                            text: Qt.formatDate(new Date(), "dddd").toUpperCase()
+                            font.family: root.boldFont
+                            font.pixelSize: 15 * s
+                            font.letterSpacing: 6 * s
+                            font.weight: Font.Black
+                            color: root.mainTextColor
+                            renderType: Text.NativeRendering
+                        }
+
+                        Text {
+                            text: "◆"
+                            font.pixelSize: 8 * s
+                            color: root.accentColor
+                            anchors.verticalCenter: parent.verticalCenter
+                        }
+
+                        Text {
+                            text: Qt.formatDate(new Date(), "dd MMMM yyyy").toUpperCase()
+                            font.family: root.semiBoldFont
+                            font.pixelSize: 13 * s
+                            font.letterSpacing: 4 * s
+                            font.weight: Font.DemiBold
+                            color: root.subTextColor
+                            renderType: Text.NativeRendering
+                        }
+                    }
+                }
+            }
+
+            // 3. Floating Horizon Cyber-Deck (Centered Horizontal Command Console)
+            Rectangle {
+                id: astralAuthDeck
+                anchors.horizontalCenter: parent.horizontalCenter
+                anchors.bottom: parent.bottom
+                anchors.bottomMargin: parent.height * 0.15
+                width: 600 * s
+                height: 76 * s
+                radius: 18 * s
+                color: root.isErrorState
+                       ? Qt.rgba(36/255, 8/255, 14/255, 0.88)
+                       : Qt.rgba(14/255, 10/255, 26/255, 0.80)
+                border.color: root.isErrorState
+                              ? root.errorColor
+                              : (root.isLoggingIn || astralPassInput.activeFocus ? root.accentColor : Qt.rgba(root.accentColor.r, root.accentColor.g, root.accentColor.b, 0.35))
+                border.width: (root.isErrorState || root.isLoggingIn) ? 2 * s : 1.5 * s
+
+                Behavior on color { ColorAnimation { duration: 250 } }
+                Behavior on border.color { ColorAnimation { duration: 250 } }
+
+                Row {
+                    anchors.fill: parent
+                    anchors.leftMargin: 16 * s
+                    anchors.rightMargin: 16 * s
+                    spacing: 16 * s
+
+                    // Left Section: User Identity Pod
+                    Item {
+                        width: 175 * s
+                        height: parent.height
+
+                        Row {
+                            anchors.left: parent.left
+                            anchors.verticalCenter: parent.verticalCenter
+                            spacing: 12 * s
+
+                            // User Avatar Circle
+                            Rectangle {
+                                width: 44 * s
+                                height: 44 * s
+                                radius: 22 * s
+                                color: Qt.rgba(root.accentColor.r, root.accentColor.g, root.accentColor.b, 0.14)
+                                border.color: root.accentColor
+                                border.width: 1.5 * s
+                                anchors.verticalCenter: parent.verticalCenter
+
+                                Text {
+                                    anchors.centerIn: parent
+                                    text: root.currentUserDisplayName.length > 0 ? root.currentUserDisplayName.charAt(0) : "S"
+                                    font.family: root.boldFont
+                                    font.pixelSize: 18 * s
+                                    font.weight: Font.Black
+                                    color: root.accentColor
+                                    renderType: Text.NativeRendering
+                                }
+                            }
+
+                            // User Display Name & Status
+                            Column {
+                                anchors.verticalCenter: parent.verticalCenter
+                                spacing: 2 * s
+                                width: 110 * s
+
+                                Row {
+                                    spacing: 6 * s
+                                    Text {
+                                        text: root.currentUserDisplayName
+                                        font.family: root.boldFont
+                                        font.pixelSize: 14 * s
+                                        font.letterSpacing: 2 * s
+                                        font.weight: Font.Black
+                                        color: root.mainTextColor
+                                        elide: Text.ElideRight
+                                        renderType: Text.NativeRendering
+                                    }
+
+                                    Text {
+                                        visible: typeof userModel !== "undefined" && userModel && userModel.rowCount() > 1
+                                        text: root.userMenuOpen ? "▲" : "▼"
+                                        font.pixelSize: 9 * s
+                                        color: astralUserMa.containsMouse ? root.accentColor : root.dimTextColor
+                                        anchors.verticalCenter: parent.verticalCenter
+                                    }
+                                }
+
+                                Text {
+                                    text: "ASTRAL OPERATOR"
+                                    font.family: root.semiBoldFont
+                                    font.pixelSize: 9 * s
+                                    font.letterSpacing: 1.5 * s
+                                    font.weight: Font.DemiBold
+                                    color: root.dimTextColor
+                                    renderType: Text.NativeRendering
+                                }
+                            }
+                        }
+
+                        MouseArea {
+                            id: astralUserMa
+                            anchors.fill: parent
+                            hoverEnabled: true
+                            cursorShape: (typeof userModel !== "undefined" && userModel && userModel.rowCount() > 1) ? Qt.PointingHandCursor : Qt.ArrowCursor
+                            onClicked: {
+                                if (typeof userModel !== "undefined" && userModel.rowCount() > 1) {
+                                    root.userMenuOpen = !root.userMenuOpen
+                                    root.sessionMenuOpen = false
+                                }
+                            }
+                        }
+                    }
+
+                    // Vertical Divider 1
+                    Rectangle {
+                        width: 1 * s
+                        height: 38 * s
+                        color: Qt.rgba(255, 255, 255, 0.08)
+                        anchors.verticalCenter: parent.verticalCenter
+                    }
+
+                    // Middle Section: Password Capsule & Laser Scanner
+                    Item {
+                        width: 300 * s
+                        height: parent.height
+                        clip: true
+
+                        // Scanning Laser Beam during authentication
+                        Rectangle {
+                            id: astralScanBar
+                            anchors.bottom: parent.bottom
+                            anchors.bottomMargin: 8 * s
+                            height: 2.5 * s
+                            width: parent.width * 0.40
+                            radius: 1 * s
+                            visible: root.isLoggingIn
+                            gradient: Gradient {
+                                orientation: Gradient.Horizontal
+                                GradientStop { position: 0.0; color: "transparent" }
+                                GradientStop { position: 0.5; color: root.accentColor }
+                                GradientStop { position: 1.0; color: "transparent" }
+                            }
+                            SequentialAnimation on x {
+                                running: root.isLoggingIn
+                                loops: Animation.Infinite
+                                NumberAnimation { from: 0; to: 300 * s - astralScanBar.width; duration: 420; easing.type: Easing.InOutQuad }
+                                NumberAnimation { from: 300 * s - astralScanBar.width; to: 0; duration: 420; easing.type: Easing.InOutQuad }
+                            }
+                        }
+
+                        // Key Icon
+                        Text {
+                            id: astralKeyIcon
+                            anchors.left: parent.left
+                            anchors.leftMargin: 4 * s
+                            anchors.verticalCenter: parent.verticalCenter
+                            text: root.isErrorState ? "✕" : "⚿"
+                            font.pixelSize: 18 * s
+                            color: root.isErrorState ? root.errorColor : (root.isLoggingIn || astralPassInput.activeFocus ? root.accentColor : root.dimTextColor)
+                        }
+
+                        // Password Input Field
+                        TextInput {
+                            id: astralPassInput
+                            anchors.left: astralKeyIcon.right
+                            anchors.leftMargin: 12 * s
+                            anchors.right: parent.right
+                            anchors.rightMargin: 8 * s
+                            anchors.verticalCenter: parent.verticalCenter
+                            echoMode: TextInput.Password
+                            passwordCharacter: "•"
+                            color: root.mainTextColor
+                            font.family: root.boldFont
+                            font.pixelSize: 18 * s
+                            font.letterSpacing: 5 * s
+                            focus: root.isAstralLayout
+                            activeFocusOnPress: false
+                            cursorVisible: true
+                            enabled: !root.isLoggingIn
+                            renderType: Text.NativeRendering
+                            inputMethodHints: root.enableVirtualKeyboard ? Qt.ImhNone : (Qt.ImhHiddenText | Qt.ImhSensitiveData | Qt.ImhNoPredictiveText)
+                            onActiveFocusChanged: {
+                                if (activeFocus && !root.enableVirtualKeyboard) {
+                                    Qt.inputMethod.hide()
+                                }
+                            }
+                            Keys.onReturnPressed: root.startLoginSequence()
+                        }
+
+                        // Placeholder Text
+                        Text {
+                            anchors.left: astralKeyIcon.right
+                            anchors.leftMargin: 12 * s
+                            anchors.verticalCenter: parent.verticalCenter
+                            text: root.authSubtitle
+                            font.family: root.semiBoldFont
+                            font.pixelSize: 11 * s
+                            font.letterSpacing: 2 * s
+                            color: root.dimTextColor
+                            visible: astralPassInput.text.length === 0 && !astralPassInput.activeFocus && !root.isLoggingIn
+                        }
+
+                        MouseArea {
+                            anchors.fill: parent
+                            z: -1
+                            cursorShape: Qt.IBeamCursor
+                            onClicked: {
+                                astralPassInput.forceActiveFocus()
+                                if (!root.enableVirtualKeyboard) Qt.inputMethod.hide()
+                            }
+                        }
+                    }
+
+                    // Vertical Divider 2
+                    Rectangle {
+                        width: 1 * s
+                        height: 38 * s
+                        color: Qt.rgba(255, 255, 255, 0.08)
+                        anchors.verticalCenter: parent.verticalCenter
+                    }
+
+                    // Right Section: Unlock Action Trigger
+                    Rectangle {
+                        id: astralSubmitBtn
+                        width: 40 * s
+                        height: 40 * s
+                        radius: 10 * s
+                        anchors.verticalCenter: parent.verticalCenter
+                        color: root.isErrorState
+                               ? root.errorColor
+                               : ((astralPassInput.text.length > 0 || astralSubMa.containsMouse || root.isLoggingIn) ? root.accentColor : Qt.rgba(255, 255, 255, 0.06))
+
+                        Behavior on color { ColorAnimation { duration: 150 } }
+
+                        Text {
+                            id: astralSubmitIcon
+                            anchors.centerIn: parent
+                            text: root.isLoggingIn ? "◌" : (root.isErrorState ? "✕" : "→")
+                            font.family: root.boldFont
+                            font.pixelSize: root.isLoggingIn ? 20 * s : 18 * s
+                            font.weight: Font.Black
+                            color: (astralPassInput.text.length > 0 || astralSubMa.containsMouse || root.isLoggingIn || root.isErrorState) ? "#080511" : root.dimTextColor
+
+                            RotationAnimation on rotation {
+                                running: root.isLoggingIn
+                                loops: Animation.Infinite
+                                from: 0
+                                to: 360
+                                duration: 800
+                            }
+                        }
+
+                        MouseArea {
+                            id: astralSubMa
+                            anchors.fill: parent
+                            enabled: !root.isLoggingIn
+                            hoverEnabled: true
+                            cursorShape: Qt.PointingHandCursor
+                            onClicked: root.startLoginSequence()
+                        }
+                    }
+                }
+            }
+
+            // 4. Centered Dynamic Status Readout (Below the Auth Deck)
+            Text {
+                id: astralStatusText
+                anchors.horizontalCenter: parent.horizontalCenter
+                anchors.top: astralAuthDeck.bottom
+                anchors.topMargin: 14 * s
+                text: root.isErrorState
+                      ? "ACCESS DENIED // INVALID CREDENTIALS"
+                      : (root.isLoggingIn
+                         ? "AUTHENTICATING ASTRAL QUANTUM KEY..."
+                         : (astralPassInput.text.length > 0 ? "PRESS ENTER TO INITIALIZE" : root.authPrompt))
+                font.family: root.boldFont
+                font.pixelSize: 11 * s
+                font.letterSpacing: 3 * s
+                font.weight: Font.Bold
+                color: root.isErrorState
+                       ? root.errorColor
+                       : (root.isLoggingIn || astralPassInput.text.length > 0 ? root.accentColor : root.subTextColor)
+                renderType: Text.NativeRendering
+
+                SequentialAnimation on opacity {
+                    running: root.isLoggingIn
+                    loops: Animation.Infinite
+                    NumberAnimation { to: 0.35; duration: 320; easing.type: Easing.InOutSine }
+                    NumberAnimation { to: 1.0; duration: 320; easing.type: Easing.InOutSine }
                 }
             }
         }
@@ -2241,7 +2718,7 @@ Rectangle {
 
     // Login Action Logic
     function startLoginSequence() {
-        var pw = root.isModernLayout ? minPassInput.text : passInput.text
+        var pw = root.getActivePassword()
         if (pw.length === 0 || root.isLoggingIn) {
             root.focusActiveInput()
             return
@@ -2284,6 +2761,9 @@ Rectangle {
             if (typeof minErrText !== "undefined" && minErrText) {
                 minErrText.text = (minPassInput.text.length > 0 ? "PRESS ENTER TO UNLOCK" : root.authPrompt)
             }
+            if (typeof astralStatusText !== "undefined" && astralStatusText) {
+                astralStatusText.text = (astralPassInput.text.length > 0 ? "PRESS ENTER TO INITIALIZE" : root.authPrompt)
+            }
             if (typeof errText !== "undefined" && errText) {
                 errText.text = ""
             }
@@ -2293,7 +2773,7 @@ Rectangle {
 
     function doLogin() {
         var uname = root.currentUserLoginName
-        var pw = root.isModernLayout ? minPassInput.text : passInput.text
+        var pw = root.getActivePassword()
         if (typeof sddm !== "undefined") {
             sddm.login(uname, pw, root.sessionIndex)
         }
@@ -2312,6 +2792,7 @@ Rectangle {
             root.isErrorState = false
             errText.text = ""
             if (typeof minErrText !== "undefined" && minErrText) minErrText.text = "ACCESS GRANTED // INITIALIZING SYSTEM"
+            if (typeof astralStatusText !== "undefined" && astralStatusText) astralStatusText.text = "ACCESS GRANTED // ASTRAL LINK ESTABLISHED"
             if (root.isModernLayout) {
                 minUnlockAnim.start()
             }
@@ -2324,8 +2805,10 @@ Rectangle {
             root.isErrorState = true
             errText.text = "ACCESS DENIED"
             if (typeof minErrText !== "undefined" && minErrText) minErrText.text = "ACCESS DENIED // INVALID CREDENTIALS"
+            if (typeof astralStatusText !== "undefined" && astralStatusText) astralStatusText.text = "ACCESS DENIED // INVALID CREDENTIALS"
             passInput.text = ""
             if (typeof minPassInput !== "undefined" && minPassInput) minPassInput.text = ""
+            if (typeof astralPassInput !== "undefined" && astralPassInput) astralPassInput.text = ""
             root.focusActiveInput()
             shakeAnim.restart()
             errorResetTimer.restart()

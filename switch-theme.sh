@@ -53,8 +53,9 @@ EOF
 THEMES=(
     "default|Prohori Classic|#38bdf8|Iconic orbital concentric chronometer dials on deep obsidian navy"
     "minimal|Prohori Minimal|#00f5a0|Architectural monolithic digital clock, live kinetic millisecond sweep & floating auth dock"
-    "astral|Prohori Astral|#b026ff|Stacked architectural typography, cybernetic telemetry & constellation mesh on cosmic abyss"
+    "astral|Prohori Astral|#b026ff|Monumental centered chronometer, horizon cyber-deck & rising violet mist on cosmic abyss"
 )
+
 
 
 # Helper to extract value from theme.conf

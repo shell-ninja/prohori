@@ -19,11 +19,12 @@ Do **NOT** re-add legacy themes 4 to 9 or cyberpunk. The project is focused excl
    - Accent: `#00f5a0` (Hyper-Mint Green).
 
 3. **Prohori Astral** (`themes/astral.conf`):
-   - Layout: Stacked architectural typography (giant white hours over electric violet minutes), vertical timeline rail with seconds bead, telemetry counter (`SEC // [26s // 60]`).
-   - Background: Deep cosmic abyss wallpaper (`backgrounds/astral.jpg`) with fine micro-starfield matrix.
-   - Ambient Animation: Dynamic cyber-celestial Constellation Mesh (28 floating nodes with distance-based dynamic connection lines and nexus halos).
-   - Dock: Center-right floating authentication card (`minAuthCard`) with violet laser scan and rotating radar indicator.
+   - Layout: Monumental Centered Architectural Chronometer (`astralCenterClock`) in upper-center, floating horizontal cyber-deck (`astralAuthDeck`) in lower-center, cyber seconds plasma rail, and centered celestial date.
+   - Background: Deep cosmic abyss wallpaper (`backgrounds/astral.jpg`).
+   - Ambient Atmosphere: Ethereal Rising Violet Fog & Volumetric Billowing Smoke plumes (16 staggered plumes with sinusoidal wafting, expanding radii, dissipating opacity, and triple undulating ground mist layers).
+   - Dock: Centered horizontal command console (`astralAuthDeck`, 600px × 76px) with integrated avatar pod, masked passcode capsule, scanning laser beam, and unlock trigger.
    - Accent: `#b026ff` (Neon Amethyst / Violet).
+
 
 
 ## Authentication Mechanics (Minimal Theme)
